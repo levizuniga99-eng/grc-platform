@@ -17,6 +17,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -26,6 +27,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
   {
@@ -143,6 +145,14 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            Theme
+          </span>
+          <ThemeToggle />
+        </div>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
