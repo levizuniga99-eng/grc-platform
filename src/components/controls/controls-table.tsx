@@ -144,37 +144,13 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
 
   const columns: ColumnDef<Control>[] = [
     {
-      id: "criteria",
-      header: "Criteria",
-      cell: ({ row }) => {
-        const criteria = controlCriteriaMap.get(row.original.id) || [];
-        if (criteria.length === 0) {
-          return <span className="text-xs text-muted-foreground">—</span>;
-        }
-        // Sort criteria in numerical order
-        const sortedCriteria = [...criteria].sort((a, b) => {
-          const parsedA = parseCriteriaCode(a);
-          const parsedB = parseCriteriaCode(b);
-          if (parsedA.category !== parsedB.category) {
-            return parsedA.category - parsedB.category;
-          }
-          return parsedA.requirement - parsedB.requirement;
-        });
-        return (
-          <div className="flex flex-wrap gap-1">
-            {sortedCriteria.slice(0, 3).map((code) => (
-              <Badge key={code} variant="outline" className="font-mono text-xs">
-                {code}
-              </Badge>
-            ))}
-            {sortedCriteria.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
-                +{sortedCriteria.length - 3}
-              </Badge>
-            )}
-          </div>
-        );
-      },
+      accessorKey: "id",
+      header: "Control ID",
+      cell: ({ row }) => (
+        <span className="font-mono text-xs text-muted-foreground">
+          {row.getValue("id")}
+        </span>
+      ),
     },
     {
       accessorKey: "name",
@@ -232,6 +208,39 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
           {format(new Date(row.getValue("lastTested")), "MMM d, yyyy")}
         </span>
       ),
+    },
+    {
+      id: "criteria",
+      header: "Criteria",
+      cell: ({ row }) => {
+        const criteria = controlCriteriaMap.get(row.original.id) || [];
+        if (criteria.length === 0) {
+          return <span className="text-xs text-muted-foreground">—</span>;
+        }
+        // Sort criteria in numerical order
+        const sortedCriteria = [...criteria].sort((a, b) => {
+          const parsedA = parseCriteriaCode(a);
+          const parsedB = parseCriteriaCode(b);
+          if (parsedA.category !== parsedB.category) {
+            return parsedA.category - parsedB.category;
+          }
+          return parsedA.requirement - parsedB.requirement;
+        });
+        return (
+          <div className="flex flex-wrap gap-1">
+            {sortedCriteria.slice(0, 3).map((code) => (
+              <Badge key={code} variant="outline" className="font-mono text-xs">
+                {code}
+              </Badge>
+            ))}
+            {sortedCriteria.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{sortedCriteria.length - 3}
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
