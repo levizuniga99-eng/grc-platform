@@ -1,7 +1,7 @@
 "use client";
 
-import { Control } from "@/types";
-import { StatusBadge, getStatusType } from "@/components/shared/status-badge";
+import { Control, ControlStatus } from "@/types";
+import { ControlStatusSelect } from "./control-status-select";
 import {
   Sheet,
   SheetContent,
@@ -26,12 +26,14 @@ interface ControlDetailPanelProps {
   control: Control | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStatusChange?: (controlId: string, status: ControlStatus) => void;
 }
 
 export function ControlDetailPanel({
   control,
   open,
   onOpenChange,
+  onStatusChange,
 }: ControlDetailPanelProps) {
   if (!control) return null;
 
@@ -43,16 +45,24 @@ export function ControlDetailPanel({
             <span className="text-sm font-mono text-muted-foreground">
               {control.id}
             </span>
-            <StatusBadge
-              status={getStatusType(control.status)}
-              label={control.status}
-            />
           </div>
           <SheetTitle className="text-left">{control.name}</SheetTitle>
           <SheetDescription className="text-left">
             {control.description}
           </SheetDescription>
         </SheetHeader>
+
+        <div className="mt-4">
+          <label className="text-sm font-medium text-muted-foreground">Status</label>
+          <div className="mt-1">
+            <ControlStatusSelect
+              value={control.status}
+              onValueChange={(newStatus) =>
+                onStatusChange?.(control.id, newStatus)
+              }
+            />
+          </div>
+        </div>
 
         <div className="mt-6 space-y-6">
           {control.failureReason && (
