@@ -50,11 +50,6 @@ const clientNavigation = [
     title: "Compliance",
     items: [
       {
-        title: "Frameworks",
-        url: "/frameworks",
-        icon: Shield,
-      },
-      {
         title: "Controls",
         url: "/controls",
         icon: FileCheck,
@@ -63,6 +58,11 @@ const clientNavigation = [
         title: "Evidence",
         url: "/evidence",
         icon: FileText,
+      },
+      {
+        title: "Frameworks Overview",
+        url: "/frameworks",
+        icon: Shield,
       },
     ],
   },
@@ -123,11 +123,6 @@ const auditorNavigation = [
     title: "Compliance",
     items: [
       {
-        title: "Frameworks",
-        url: "/frameworks",
-        icon: Shield,
-      },
-      {
         title: "Controls",
         url: "/controls",
         icon: FileCheck,
@@ -136,6 +131,11 @@ const auditorNavigation = [
         title: "Evidence",
         url: "/evidence",
         icon: FileText,
+      },
+      {
+        title: "Frameworks Overview",
+        url: "/frameworks",
+        icon: Shield,
       },
     ],
   },
