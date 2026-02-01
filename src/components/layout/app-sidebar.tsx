@@ -15,7 +15,6 @@ import {
   Plug,
   ShieldCheck,
   LogOut,
-  ClipboardCheck,
   KeyRound,
 } from "lucide-react";
 import {
@@ -111,7 +110,7 @@ const clientNavigation = [
 
 const auditorNavigation = [
   {
-    title: "Audit Hub",
+    title: "Overview",
     items: [
       {
         title: "Dashboard",
@@ -121,7 +120,7 @@ const auditorNavigation = [
     ],
   },
   {
-    title: "Review",
+    title: "Compliance",
     items: [
       {
         title: "Frameworks",
@@ -141,7 +140,7 @@ const auditorNavigation = [
     ],
   },
   {
-    title: "Assessment",
+    title: "Risk Management",
     items: [
       {
         title: "Risks",
@@ -202,16 +201,10 @@ export function AppSidebar() {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  {user?.role === "auditor" ? (
-                    <ClipboardCheck className="size-4" />
-                  ) : (
-                    <ShieldCheck className="size-4" />
-                  )}
+                  <ShieldCheck className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">
-                    {user?.role === "auditor" ? "Audit Hub" : "GRC Platform"}
-                  </span>
+                  <span className="font-semibold">GRC Platform</span>
                   <span className="text-xs text-muted-foreground">
                     {user?.role === "auditor" ? "Auditor Portal" : "Client Portal"}
                   </span>
