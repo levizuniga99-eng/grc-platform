@@ -1,5 +1,5 @@
 export type EvidenceStatus = "Current" | "Expiring Soon" | "Expired" | "Pending Review";
-export type EvidenceType = "Screenshot" | "Document" | "API" | "Automated" | "Certificate" | "Report";
+export type EvidenceType = "Screenshot" | "Document" | "API" | "Automated" | "Certificate" | "Report" | "Population";
 
 export interface Evidence {
   id: string;

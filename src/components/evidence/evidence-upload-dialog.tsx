@@ -28,6 +28,7 @@ const evidenceTypes = [
   "Automated",
   "Certificate",
   "Report",
+  "Population",
 ];
 
 export function EvidenceUploadDialog() {

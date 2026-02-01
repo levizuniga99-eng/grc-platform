@@ -144,7 +144,7 @@ const columns: ColumnDef<Evidence>[] = [
 ];
 
 const statuses = ["Current", "Expiring Soon", "Expired", "Pending Review"];
-const types = ["Screenshot", "Document", "API", "Automated", "Certificate", "Report"];
+const types = ["Screenshot", "Document", "API", "Automated", "Certificate", "Report", "Population"];
 
 export function EvidenceTable({ evidence }: EvidenceTableProps) {
   const [statusFilter, setStatusFilter] = useState("all");
