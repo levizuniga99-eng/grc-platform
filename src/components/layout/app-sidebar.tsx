@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   LogOut,
   ClipboardCheck,
+  KeyRound,
 } from "lucide-react";
 import {
   Sidebar,
@@ -95,6 +96,11 @@ const clientNavigation = [
         icon: Users,
       },
       {
+        title: "Access",
+        url: "/access",
+        icon: KeyRound,
+      },
+      {
         title: "Integrations",
         url: "/integrations",
         icon: Plug,
@@ -151,6 +157,26 @@ const auditorNavigation = [
         title: "Vendors",
         url: "/vendors",
         icon: Building2,
+      },
+    ],
+  },
+  {
+    title: "Organization",
+    items: [
+      {
+        title: "People",
+        url: "/people",
+        icon: Users,
+      },
+      {
+        title: "Access",
+        url: "/access",
+        icon: KeyRound,
+      },
+      {
+        title: "Integrations",
+        url: "/integrations",
+        icon: Plug,
       },
     ],
   },
