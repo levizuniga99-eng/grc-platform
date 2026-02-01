@@ -7,29 +7,30 @@ import { DataTable } from "@/components/shared/data-table";
 import { ControlFilters } from "./control-filters";
 import { ControlDetailPanel } from "./control-detail-panel";
 import { ControlStatusSelect } from "./control-status-select";
+import { ControlsImportExport } from "./controls-import-export";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
-const STORAGE_KEY = "grc-control-statuses";
+const STORAGE_KEY = "grc-controls";
 
 interface ControlsTableProps {
   controls: Control[];
 }
 
-function loadSavedStatuses(): Record<string, ControlStatus> {
-  if (typeof window === "undefined") return {};
+function loadSavedControls(): Control[] | null {
+  if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
+    return saved ? JSON.parse(saved) : null;
   } catch {
-    return {};
+    return null;
   }
 }
 
-function saveStatuses(statuses: Record<string, ControlStatus>) {
+function saveControls(controls: Control[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(controls));
   } catch {
     // Ignore storage errors
   }
@@ -41,16 +42,11 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedControl, setSelectedControl] = useState<Control | null>(null);
 
-  // Load saved statuses on mount
+  // Load saved controls on mount
   useEffect(() => {
-    const savedStatuses = loadSavedStatuses();
-    if (Object.keys(savedStatuses).length > 0) {
-      setControls((prev) =>
-        prev.map((control) => ({
-          ...control,
-          status: savedStatuses[control.id] || control.status,
-        }))
-      );
+    const savedControls = loadSavedControls();
+    if (savedControls && savedControls.length > 0) {
+      setControls(savedControls);
     }
   }, []);
 
@@ -61,14 +57,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
           ? { ...control, status: newStatus }
           : control
       );
-
-      // Save all statuses to localStorage
-      const statuses: Record<string, ControlStatus> = {};
-      updated.forEach((c) => {
-        statuses[c.id] = c.status;
-      });
-      saveStatuses(statuses);
-
+      saveControls(updated);
       return updated;
     });
 
@@ -78,6 +67,11 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         prev ? { ...prev, status: newStatus } : null
       );
     }
+  };
+
+  const handleImport = (importedControls: Control[]) => {
+    setControls(importedControls);
+    saveControls(importedControls);
   };
 
   const columns: ColumnDef<Control>[] = [
@@ -161,12 +155,15 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
 
   return (
     <div className="space-y-4">
-      <ControlFilters
-        statusFilter={statusFilter}
-        categoryFilter={categoryFilter}
-        onStatusChange={setStatusFilter}
-        onCategoryChange={setCategoryFilter}
-      />
+      <div className="flex items-center justify-between">
+        <ControlFilters
+          statusFilter={statusFilter}
+          categoryFilter={categoryFilter}
+          onStatusChange={setStatusFilter}
+          onCategoryChange={setCategoryFilter}
+        />
+        <ControlsImportExport controls={controls} onImport={handleImport} />
+      </div>
 
       <DataTable
         columns={columns}
