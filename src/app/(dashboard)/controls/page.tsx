@@ -4,13 +4,16 @@ import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ControlsTable } from "@/components/controls/controls-table";
 import { ControlsByFramework } from "@/components/controls/controls-by-framework";
+import { ControlsByCriteria } from "@/components/controls/controls-by-criteria";
 import { controls } from "@/lib/mock-data/controls";
 import { frameworks } from "@/lib/mock-data/frameworks";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, FileQuestion, AlertTriangle, MinusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, FileQuestion, AlertTriangle, MinusCircle, List, LayoutGrid } from "lucide-react";
 
 export default function ControlsPage() {
   const [selectedFramework, setSelectedFramework] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "criteria">("criteria");
 
   const filteredControls = useMemo(() => {
     if (selectedFramework === "all") {
@@ -49,11 +52,33 @@ export default function ControlsPage() {
         ]}
       />
       <div className="flex flex-1 flex-col gap-6 p-4">
-        <div>
-          <h1 className="text-2xl font-bold">Controls</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and monitor your security controls across all frameworks.
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Controls</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and monitor your security controls across all frameworks.
+            </p>
+          </div>
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === "criteria" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("criteria")}
+              className="gap-2"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              By Criteria
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+              className="gap-2"
+            >
+              <List className="h-4 w-4" />
+              Table
+            </Button>
+          </div>
         </div>
 
         {/* Framework Tabs */}
@@ -143,12 +168,16 @@ export default function ControlsPage() {
           </Card>
         </div>
 
-        {/* Show organized by framework requirements when a framework is selected */}
-        {selectedFrameworkData ? (
-          <ControlsByFramework
-            framework={selectedFrameworkData}
-            controls={filteredControls}
-          />
+        {/* View based on mode and framework selection */}
+        {viewMode === "criteria" ? (
+          selectedFrameworkData ? (
+            <ControlsByFramework
+              framework={selectedFrameworkData}
+              controls={filteredControls}
+            />
+          ) : (
+            <ControlsByCriteria controls={filteredControls} />
+          )
         ) : (
           <ControlsTable controls={filteredControls} />
         )}

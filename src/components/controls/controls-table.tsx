@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Control, ControlStatus } from "@/types";
 import { DataTable } from "@/components/shared/data-table";
@@ -9,7 +9,15 @@ import { ControlDetailPanel } from "./control-detail-panel";
 import { ControlStatusSelect } from "./control-status-select";
 import { ControlsImportExport } from "./controls-import-export";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
+import { frameworks } from "@/lib/mock-data/frameworks";
 
 const STORAGE_KEY = "grc-controls";
 
@@ -36,11 +44,72 @@ function saveControls(controls: Control[]) {
   }
 }
 
+// Build a mapping of control IDs to their framework criteria
+function buildControlCriteriaMap(): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+
+  frameworks.forEach((framework) => {
+    framework.categories.forEach((category) => {
+      category.requirements.forEach((requirement) => {
+        requirement.mappedControlIds.forEach((controlId) => {
+          const existing = map.get(controlId) || [];
+          if (!existing.includes(requirement.referenceCode)) {
+            existing.push(requirement.referenceCode);
+          }
+          map.set(controlId, existing);
+        });
+      });
+    });
+  });
+
+  return map;
+}
+
+// Get SOC 2 Type II categories for filter
+function getSOC2Categories(): { id: string; name: string }[] {
+  const soc2 = frameworks.find((f) => f.id === "soc2-type2");
+  if (!soc2) return [];
+
+  return soc2.categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+  }));
+}
+
+// Parse criteria code to get sort values (e.g., "CC1.2" -> { category: 1, requirement: 2 })
+function parseCriteriaCode(code: string): { category: number; requirement: number } {
+  const match = code.match(/CC(\d+)\.(\d+)/);
+  if (match) {
+    return { category: parseInt(match[1]), requirement: parseInt(match[2]) };
+  }
+  return { category: 999, requirement: 999 };
+}
+
+// Get the primary (lowest) criteria code for sorting
+function getPrimaryCriteria(criteria: string[]): string {
+  if (!criteria || criteria.length === 0) return "ZZ99.99";
+
+  const sorted = [...criteria].sort((a, b) => {
+    const parsedA = parseCriteriaCode(a);
+    const parsedB = parseCriteriaCode(b);
+    if (parsedA.category !== parsedB.category) {
+      return parsedA.category - parsedB.category;
+    }
+    return parsedA.requirement - parsedB.requirement;
+  });
+
+  return sorted[0];
+}
+
 export function ControlsTable({ controls: initialControls }: ControlsTableProps) {
   const [controls, setControls] = useState<Control[]>(initialControls);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [criteriaFilter, setCriteriaFilter] = useState("all");
   const [selectedControl, setSelectedControl] = useState<Control | null>(null);
+
+  const controlCriteriaMap = useMemo(() => buildControlCriteriaMap(), []);
+  const soc2Categories = useMemo(() => getSOC2Categories(), []);
 
   // Load saved controls on mount
   useEffect(() => {
@@ -61,7 +130,6 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       return updated;
     });
 
-    // Also update the selected control if it's open
     if (selectedControl?.id === controlId) {
       setSelectedControl((prev) =>
         prev ? { ...prev, status: newStatus } : null
@@ -76,13 +144,37 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
 
   const columns: ColumnDef<Control>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      cell: ({ row }) => (
-        <span className="font-mono text-sm text-muted-foreground">
-          {row.getValue("id")}
-        </span>
-      ),
+      id: "criteria",
+      header: "Criteria",
+      cell: ({ row }) => {
+        const criteria = controlCriteriaMap.get(row.original.id) || [];
+        if (criteria.length === 0) {
+          return <span className="text-xs text-muted-foreground">—</span>;
+        }
+        // Sort criteria in numerical order
+        const sortedCriteria = [...criteria].sort((a, b) => {
+          const parsedA = parseCriteriaCode(a);
+          const parsedB = parseCriteriaCode(b);
+          if (parsedA.category !== parsedB.category) {
+            return parsedA.category - parsedB.category;
+          }
+          return parsedA.requirement - parsedB.requirement;
+        });
+        return (
+          <div className="flex flex-wrap gap-1">
+            {sortedCriteria.slice(0, 3).map((code) => (
+              <Badge key={code} variant="outline" className="font-mono text-xs">
+                {code}
+              </Badge>
+            ))}
+            {sortedCriteria.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{sortedCriteria.length - 3}
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "name",
@@ -143,31 +235,75 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
     },
   ];
 
-  const filteredControls = controls.filter((control) => {
-    if (statusFilter !== "all" && control.status !== statusFilter) {
-      return false;
-    }
-    if (categoryFilter !== "all" && control.category !== categoryFilter) {
-      return false;
-    }
-    return true;
-  });
+  // Filter and sort controls
+  const filteredAndSortedControls = useMemo(() => {
+    let result = controls.filter((control) => {
+      if (statusFilter !== "all" && control.status !== statusFilter) {
+        return false;
+      }
+      if (categoryFilter !== "all" && control.category !== categoryFilter) {
+        return false;
+      }
+      if (criteriaFilter !== "all") {
+        const criteria = controlCriteriaMap.get(control.id) || [];
+        // Check if any criteria starts with the selected category prefix (e.g., "CC1")
+        const categoryPrefix = criteriaFilter.replace("soc2-", "").toUpperCase();
+        const hasCriteria = criteria.some((c) => c.startsWith(categoryPrefix));
+        if (!hasCriteria) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Sort by SOC 2 criteria in numerical order
+    result = result.sort((a, b) => {
+      const criteriaA = controlCriteriaMap.get(a.id) || [];
+      const criteriaB = controlCriteriaMap.get(b.id) || [];
+      const primaryA = getPrimaryCriteria(criteriaA);
+      const primaryB = getPrimaryCriteria(criteriaB);
+      const parsedA = parseCriteriaCode(primaryA);
+      const parsedB = parseCriteriaCode(primaryB);
+
+      if (parsedA.category !== parsedB.category) {
+        return parsedA.category - parsedB.category;
+      }
+      return parsedA.requirement - parsedB.requirement;
+    });
+
+    return result;
+  }, [controls, statusFilter, categoryFilter, criteriaFilter, controlCriteriaMap]);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <ControlFilters
-          statusFilter={statusFilter}
-          categoryFilter={categoryFilter}
-          onStatusChange={setStatusFilter}
-          onCategoryChange={setCategoryFilter}
-        />
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
+          <ControlFilters
+            statusFilter={statusFilter}
+            categoryFilter={categoryFilter}
+            onStatusChange={setStatusFilter}
+            onCategoryChange={setCategoryFilter}
+          />
+          <Select value={criteriaFilter} onValueChange={setCriteriaFilter}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="All Criteria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Criteria</SelectItem>
+              {soc2Categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <ControlsImportExport controls={controls} onImport={handleImport} />
       </div>
 
       <DataTable
         columns={columns}
-        data={filteredControls}
+        data={filteredAndSortedControls}
         searchPlaceholder="Search controls..."
         onRowClick={(control) => setSelectedControl(control)}
       />
