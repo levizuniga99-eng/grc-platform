@@ -1,8 +1,7 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { ComplianceScoreCard } from "@/components/dashboard/compliance-score-card";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { FrameworksOverview } from "@/components/dashboard/frameworks-overview";
-import { ControlsStatusChart } from "@/components/dashboard/controls-status-chart";
+import { ControlsOverview } from "@/components/dashboard/controls-overview";
 import { RisksOverview } from "@/components/dashboard/risks-overview";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { TasksList } from "@/components/dashboard/tasks-list";
@@ -14,29 +13,15 @@ import {
   frameworksProgress,
   risksBySeverity,
 } from "@/lib/mock-data/dashboard";
-import {
-  CheckCircle,
-  FileText,
-} from "lucide-react";
+import { FileText } from "lucide-react";
 
 export default function DashboardPage() {
   return (
     <>
       <PageHeader breadcrumbs={[{ label: "Dashboard" }]} />
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="grid gap-4 md:grid-cols-3">
-          <ComplianceScoreCard
-            score={dashboardMetrics.overallComplianceScore}
-            acceptedControls={dashboardMetrics.acceptedControls}
-            totalControls={dashboardMetrics.totalControls}
-          />
-          <MetricCard
-            title="Accepted Controls"
-            value={`${dashboardMetrics.acceptedControls}/${dashboardMetrics.totalControls}`}
-            subtitle={`${dashboardMetrics.needsReviewControls} needs review`}
-            icon={CheckCircle}
-            variant={dashboardMetrics.evidenceNeededControls > 0 ? "warning" : "success"}
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <ControlsOverview data={controlsStatusData} />
           <MetricCard
             title="Evidence Coverage"
             value={`${Math.round((dashboardMetrics.currentEvidence / dashboardMetrics.totalEvidence) * 100)}%`}
@@ -46,9 +31,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FrameworksOverview frameworks={frameworksProgress} />
-          <ControlsStatusChart data={controlsStatusData} />
           <RisksOverview
             data={risksBySeverity}
             totalRisks={dashboardMetrics.totalRisks}
