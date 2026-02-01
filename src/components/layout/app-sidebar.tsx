@@ -240,7 +240,6 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarSeparator />
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Settings">
@@ -251,6 +250,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarSeparator />
         {user && (
           <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
             <div className="flex items-center gap-2 mb-2">
@@ -264,19 +264,17 @@ export function AppSidebar() {
             </div>
           </div>
         )}
-        <div className="flex items-center justify-between px-2 pb-2">
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="h-8 w-8"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 px-2 pb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="flex-1 gap-2 group-data-[collapsible=icon]:hidden"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+          <ThemeToggle />
         </div>
       </SidebarFooter>
       <SidebarRail />
