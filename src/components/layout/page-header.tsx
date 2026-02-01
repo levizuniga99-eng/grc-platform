@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Building2 } from "lucide-react";
 
 interface BreadcrumbItem {
   label: string;
@@ -18,6 +19,11 @@ interface PageHeaderProps {
   breadcrumbs: BreadcrumbItem[];
   actions?: React.ReactNode;
 }
+
+// These would typically come from a context or settings store
+const organizationName = "Acme Corporation";
+const scopeName = "CloudSync Platform";
+const auditName = "SOC 2 Type II Audit 2024";
 
 export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
   return (
@@ -45,7 +51,17 @@ export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      <div className="flex items-center gap-4">
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        <div className="flex items-center gap-2 text-sm">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{organizationName}</span>
+          <Separator orientation="vertical" className="h-4" />
+          <span className="text-muted-foreground">{scopeName}</span>
+          <Separator orientation="vertical" className="h-4" />
+          <span className="text-muted-foreground">{auditName}</span>
+        </div>
+      </div>
     </header>
   );
 }

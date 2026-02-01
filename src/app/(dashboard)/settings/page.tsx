@@ -94,6 +94,14 @@ export default function SettingsPage() {
                 <Input id="orgName" defaultValue="Acme Corporation" />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="scopeName">Scope Name</Label>
+                <Input id="scopeName" defaultValue="CloudSync Platform" placeholder="e.g., Platform or application name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="auditName">Audit Name</Label>
+                <Input id="auditName" defaultValue="SOC 2 Type II Audit 2024" placeholder="e.g., SOC 2 Type II Audit 2024" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="industry">Industry</Label>
                 <Select defaultValue="technology">
                   <SelectTrigger>
