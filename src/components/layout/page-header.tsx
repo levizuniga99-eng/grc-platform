@@ -1,3 +1,5 @@
+"use client";
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -9,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Building2 } from "lucide-react";
+import { useSettings } from "@/contexts/settings-context";
 
 interface BreadcrumbItem {
   label: string;
@@ -20,12 +23,9 @@ interface PageHeaderProps {
   actions?: React.ReactNode;
 }
 
-// These would typically come from a context or settings store
-const organizationName = "Acme Corporation";
-const scopeName = "CloudSync Platform";
-const auditName = "SOC 2 Type II Audit 2024";
-
 export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
+  const { settings } = useSettings();
+
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-sidebar">
       <div className="flex items-center gap-2">
@@ -55,11 +55,11 @@ export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
         {actions && <div className="flex items-center gap-2">{actions}</div>}
         <div className="flex items-center gap-2 text-sm">
           <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{organizationName}</span>
+          <span className="font-medium">{settings.organizationName}</span>
           <Separator orientation="vertical" className="h-4" />
-          <span className="text-muted-foreground">{scopeName}</span>
+          <span className="text-muted-foreground">{settings.scopeName}</span>
           <Separator orientation="vertical" className="h-4" />
-          <span className="text-muted-foreground">{auditName}</span>
+          <span className="text-muted-foreground">{settings.auditName}</span>
         </div>
       </div>
     </header>

@@ -25,7 +25,9 @@ import {
   FileText,
   UserPlus,
   Trash2,
+  Check,
 } from "lucide-react";
+import { useSettings } from "@/contexts/settings-context";
 
 interface TeamMember {
   id: string;
@@ -42,7 +44,16 @@ const mockTeamMembers: TeamMember[] = [
 ];
 
 export default function SettingsPage() {
+  const { settings, updateSettings } = useSettings();
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [saved, setSaved] = useState(false);
+
+  // Local form state for organization settings
+  const [orgName, setOrgName] = useState(settings.organizationName);
+  const [scopeName, setScopeName] = useState(settings.scopeName);
+  const [auditName, setAuditName] = useState(settings.auditName);
+  const [industry, setIndustry] = useState(settings.industry);
+  const [timezone, setTimezone] = useState(settings.timezone);
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -60,6 +71,18 @@ export default function SettingsPage() {
   const [autoArchive, setAutoArchive] = useState(true);
   const [retentionPeriod, setRetentionPeriod] = useState("7");
   const [requireApproval, setRequireApproval] = useState(true);
+
+  const handleSaveOrganization = () => {
+    updateSettings({
+      organizationName: orgName,
+      scopeName: scopeName,
+      auditName: auditName,
+      industry: industry,
+      timezone: timezone,
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <>
@@ -91,19 +114,33 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="orgName">Organization Name</Label>
-                <Input id="orgName" defaultValue="Acme Corporation" />
+                <Input
+                  id="orgName"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="scopeName">Scope Name</Label>
-                <Input id="scopeName" defaultValue="CloudSync Platform" placeholder="e.g., Platform or application name" />
+                <Input
+                  id="scopeName"
+                  value={scopeName}
+                  onChange={(e) => setScopeName(e.target.value)}
+                  placeholder="e.g., Platform or application name"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="auditName">Audit Name</Label>
-                <Input id="auditName" defaultValue="SOC 2 Type II Audit 2024" placeholder="e.g., SOC 2 Type II Audit 2024" />
+                <Input
+                  id="auditName"
+                  value={auditName}
+                  onChange={(e) => setAuditName(e.target.value)}
+                  placeholder="e.g., SOC 2 Type II Audit 2024"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="industry">Industry</Label>
-                <Select defaultValue="technology">
+                <Select value={industry} onValueChange={setIndustry}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -118,7 +155,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone">Timezone</Label>
-                <Select defaultValue="pst">
+                <Select value={timezone} onValueChange={setTimezone}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -131,7 +168,16 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full">Save Changes</Button>
+              <Button className="w-full gap-2" onClick={handleSaveOrganization}>
+                {saved ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Saved!
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </CardContent>
           </Card>
 
