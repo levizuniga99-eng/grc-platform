@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { MetricCard } from "@/components/dashboard/metric-card";
 import { FrameworksOverview } from "@/components/dashboard/frameworks-overview";
 import { ControlsOverview } from "@/components/dashboard/controls-overview";
 import { RisksOverview } from "@/components/dashboard/risks-overview";
@@ -13,23 +12,13 @@ import {
   frameworksProgress,
   risksBySeverity,
 } from "@/lib/mock-data/dashboard";
-import { FileText } from "lucide-react";
 
 export default function DashboardPage() {
   return (
     <>
       <PageHeader breadcrumbs={[{ label: "Dashboard" }]} />
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <ControlsOverview data={controlsStatusData} />
-          <MetricCard
-            title="Evidence Coverage"
-            value={`${Math.round((dashboardMetrics.currentEvidence / dashboardMetrics.totalEvidence) * 100)}%`}
-            subtitle={`${dashboardMetrics.currentEvidence} of ${dashboardMetrics.totalEvidence} items current`}
-            icon={FileText}
-            variant="default"
-          />
-        </div>
+        <ControlsOverview data={controlsStatusData} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FrameworksOverview frameworks={frameworksProgress} />
