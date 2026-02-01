@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ControlsTable } from "@/components/controls/controls-table";
+import { ControlsByFramework } from "@/components/controls/controls-by-framework";
 import { controls } from "@/lib/mock-data/controls";
 import { frameworks } from "@/lib/mock-data/frameworks";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,11 @@ export default function ControlsPage() {
       return controls;
     }
     return controls.filter((c) => c.frameworkIds.includes(selectedFramework));
+  }, [selectedFramework]);
+
+  const selectedFrameworkData = useMemo(() => {
+    if (selectedFramework === "all") return null;
+    return frameworks.find((f) => f.id === selectedFramework);
   }, [selectedFramework]);
 
   const acceptedCount = filteredControls.filter((c) => c.status === "Accepted").length;
@@ -137,7 +143,15 @@ export default function ControlsPage() {
           </Card>
         </div>
 
-        <ControlsTable controls={filteredControls} />
+        {/* Show organized by framework requirements when a framework is selected */}
+        {selectedFrameworkData ? (
+          <ControlsByFramework
+            framework={selectedFrameworkData}
+            controls={filteredControls}
+          />
+        ) : (
+          <ControlsTable controls={filteredControls} />
+        )}
       </div>
     </>
   );
