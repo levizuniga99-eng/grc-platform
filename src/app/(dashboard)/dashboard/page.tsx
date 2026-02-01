@@ -15,7 +15,6 @@ import {
   risksBySeverity,
 } from "@/lib/mock-data/dashboard";
 import {
-  AlertTriangle,
   CheckCircle,
   FileText,
 } from "lucide-react";
@@ -25,18 +24,11 @@ export default function DashboardPage() {
     <>
       <PageHeader breadcrumbs={[{ label: "Dashboard" }]} />
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <ComplianceScoreCard
             score={dashboardMetrics.overallComplianceScore}
             acceptedControls={dashboardMetrics.acceptedControls}
             totalControls={dashboardMetrics.totalControls}
-          />
-          <MetricCard
-            title="Critical Risks"
-            value={dashboardMetrics.criticalRisks}
-            subtitle={`${dashboardMetrics.highRisks} high risks`}
-            icon={AlertTriangle}
-            variant={dashboardMetrics.criticalRisks > 0 ? "danger" : "success"}
           />
           <MetricCard
             title="Accepted Controls"
