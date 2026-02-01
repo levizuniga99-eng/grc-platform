@@ -101,7 +101,7 @@ const columns: ColumnDef<Risk>[] = [
   },
   {
     accessorKey: "dueDate",
-    header: "Due Date",
+    header: "Last Reviewed",
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {format(new Date(row.getValue("dueDate")), "MMM d, yyyy")}
@@ -238,7 +238,7 @@ export function RiskRegisterTable({ risks }: RiskRegisterTableProps) {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span>Due: {format(new Date(selectedRisk.dueDate), "MMM d, yyyy")}</span>
+                      <span>Last Reviewed: {format(new Date(selectedRisk.dueDate), "MMM d, yyyy")}</span>
                     </div>
                   </div>
                 </div>

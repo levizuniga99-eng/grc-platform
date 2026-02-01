@@ -37,7 +37,7 @@ export function EvidenceUploadDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-500 dark:hover:bg-zinc-400">
           <Upload className="h-4 w-4 mr-2" />
           Upload Evidence
         </Button>

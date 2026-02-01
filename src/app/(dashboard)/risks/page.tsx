@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { RiskMatrix } from "@/components/risks/risk-matrix";
 import { RiskRegisterTable } from "@/components/risks/risk-register-table";
 import { risks } from "@/lib/mock-data/risks";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,8 +86,6 @@ export default function RisksPage() {
             </CardContent>
           </Card>
         </div>
-
-        <RiskMatrix risks={risks} />
 
         <div>
           <h2 className="text-lg font-semibold mb-4">All Risks ({risks.length})</h2>

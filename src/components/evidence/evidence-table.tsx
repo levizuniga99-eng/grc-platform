@@ -26,6 +26,7 @@ import {
 
 interface EvidenceTableProps {
   evidence: Evidence[];
+  actions?: React.ReactNode;
 }
 
 const typeIcons: Record<string, typeof FileText> = {
@@ -146,7 +147,7 @@ const columns: ColumnDef<Evidence>[] = [
 const statuses = ["Current", "Expiring Soon", "Expired", "Pending Review"];
 const types = ["Screenshot", "Document", "API", "Automated", "Certificate", "Report", "Population"];
 
-export function EvidenceTable({ evidence }: EvidenceTableProps) {
+export function EvidenceTable({ evidence, actions }: EvidenceTableProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
@@ -196,6 +197,7 @@ export function EvidenceTable({ evidence }: EvidenceTableProps) {
         columns={columns}
         data={filteredEvidence}
         searchPlaceholder="Search evidence..."
+        actions={actions}
       />
     </div>
   );

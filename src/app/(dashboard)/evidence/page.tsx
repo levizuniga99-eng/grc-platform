@@ -22,7 +22,6 @@ export default function EvidencePage() {
           { label: "Compliance", href: "/frameworks" },
           { label: "Evidence" },
         ]}
-        actions={<EvidenceUploadDialog />}
       />
       <div className="flex flex-1 flex-col gap-6 p-4">
         <div>
@@ -90,7 +89,7 @@ export default function EvidencePage() {
           </Card>
         </div>
 
-        <EvidenceTable evidence={evidence} />
+        <EvidenceTable evidence={evidence} actions={<EvidenceUploadDialog />} />
       </div>
     </>
   );
