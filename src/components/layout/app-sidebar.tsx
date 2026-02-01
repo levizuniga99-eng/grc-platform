@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   LogOut,
   KeyRound,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -240,6 +241,16 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Settings">
+              <Link href="/settings">
+                <Settings className="size-4" />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         {user && (
           <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
             <div className="flex items-center gap-2 mb-2">
