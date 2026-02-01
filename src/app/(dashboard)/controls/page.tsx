@@ -1,20 +1,38 @@
+"use client";
+
+import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ControlsTable } from "@/components/controls/controls-table";
 import { controls } from "@/lib/mock-data/controls";
+import { frameworks } from "@/lib/mock-data/frameworks";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, FileQuestion, AlertTriangle, MinusCircle } from "lucide-react";
 
 export default function ControlsPage() {
-  const acceptedCount = controls.filter((c) => c.status === "Accepted").length;
-  const evidenceNeededCount = controls.filter(
+  const [selectedFramework, setSelectedFramework] = useState<string>("all");
+
+  const filteredControls = useMemo(() => {
+    if (selectedFramework === "all") {
+      return controls;
+    }
+    return controls.filter((c) => c.frameworkIds.includes(selectedFramework));
+  }, [selectedFramework]);
+
+  const acceptedCount = filteredControls.filter((c) => c.status === "Accepted").length;
+  const evidenceNeededCount = filteredControls.filter(
     (c) => c.status === "Additional Evidence Needed"
   ).length;
-  const needsReviewCount = controls.filter(
+  const needsReviewCount = filteredControls.filter(
     (c) => c.status === "Needs Review"
   ).length;
-  const notApplicableCount = controls.filter(
+  const notApplicableCount = filteredControls.filter(
     (c) => c.status === "Not Applicable"
   ).length;
+
+  const frameworkTabs = [
+    { id: "all", name: "All Frameworks" },
+    ...frameworks.map((f) => ({ id: f.id, name: f.name })),
+  ];
 
   return (
     <>
@@ -30,6 +48,35 @@ export default function ControlsPage() {
           <p className="text-muted-foreground mt-1">
             Manage and monitor your security controls across all frameworks.
           </p>
+        </div>
+
+        {/* Framework Tabs */}
+        <div className="flex flex-wrap gap-2 border-b pb-2">
+          {frameworkTabs.map((tab) => {
+            const isActive = selectedFramework === tab.id;
+            const controlCount = tab.id === "all"
+              ? controls.length
+              : controls.filter((c) => c.frameworkIds.includes(tab.id)).length;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedFramework(tab.id)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.name}
+                <span className={`ml-2 px-1.5 py-0.5 text-xs rounded ${
+                  isActive ? "bg-primary-foreground/20" : "bg-background"
+                }`}>
+                  {controlCount}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -90,7 +137,7 @@ export default function ControlsPage() {
           </Card>
         </div>
 
-        <ControlsTable controls={controls} />
+        <ControlsTable controls={filteredControls} />
       </div>
     </>
   );
