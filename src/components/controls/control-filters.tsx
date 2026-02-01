@@ -17,10 +17,10 @@ interface ControlFiltersProps {
 }
 
 const statuses: ControlStatus[] = [
-  "Passing",
-  "Failing",
-  "Needs Attention",
-  "Not Implemented",
+  "Needs Review",
+  "Additional Evidence Needed",
+  "Accepted",
+  "Not Applicable",
 ];
 
 const categories: ControlCategory[] = [

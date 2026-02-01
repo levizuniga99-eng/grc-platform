@@ -2,10 +2,11 @@ import { DashboardMetrics, ActivityItem, TaskItem } from "@/types";
 
 export const dashboardMetrics: DashboardMetrics = {
   overallComplianceScore: 82,
-  totalControls: 48,
-  passingControls: 39,
-  failingControls: 4,
-  needsAttentionControls: 5,
+  totalControls: 16,
+  acceptedControls: 11,
+  evidenceNeededControls: 2,
+  needsReviewControls: 2,
+  notApplicableControls: 1,
   totalRisks: 23,
   criticalRisks: 2,
   highRisks: 5,
@@ -20,8 +21,8 @@ export const dashboardMetrics: DashboardMetrics = {
 export const recentActivity: ActivityItem[] = [
   {
     id: "act-001",
-    type: "control_passed",
-    title: "MFA Enforcement Control Passed",
+    type: "control_accepted",
+    title: "MFA Enforcement Control Accepted",
     description: "Automated check confirmed 100% MFA adoption across all user accounts",
     timestamp: "2026-01-31T09:15:00Z",
     actor: "System",
@@ -52,8 +53,8 @@ export const recentActivity: ActivityItem[] = [
   },
   {
     id: "act-005",
-    type: "control_failed",
-    title: "Backup Verification Failed",
+    type: "control_evidence_needed",
+    title: "Backup Verification Needs Evidence",
     description: "Weekly backup restoration test did not complete successfully",
     timestamp: "2026-01-29T23:45:00Z",
     actor: "System",
@@ -142,9 +143,10 @@ export const upcomingTasks: TaskItem[] = [
 ];
 
 export const controlsStatusData = [
-  { name: "Passing", value: 39, color: "#10b981" },
-  { name: "Failing", value: 4, color: "#ef4444" },
-  { name: "Needs Attention", value: 5, color: "#f59e0b" },
+  { name: "Accepted", value: 11, color: "#10b981" },
+  { name: "Needs Review", value: 2, color: "#3b82f6" },
+  { name: "Evidence Needed", value: 2, color: "#f59e0b" },
+  { name: "Not Applicable", value: 1, color: "#6b7280" },
 ];
 
 export const frameworksProgress = [

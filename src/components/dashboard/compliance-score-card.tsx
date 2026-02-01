@@ -5,13 +5,13 @@ import { Progress } from "@/components/ui/progress";
 
 interface ComplianceScoreCardProps {
   score: number;
-  passingControls: number;
+  acceptedControls: number;
   totalControls: number;
 }
 
 export function ComplianceScoreCard({
   score,
-  passingControls,
+  acceptedControls,
   totalControls,
 }: ComplianceScoreCardProps) {
   const getScoreColor = (score: number) => {
@@ -39,7 +39,7 @@ export function ComplianceScoreCard({
             {score}%
           </span>
           <span className="text-sm text-muted-foreground">
-            {passingControls}/{totalControls} controls passing
+            {acceptedControls}/{totalControls} controls accepted
           </span>
         </div>
         <Progress

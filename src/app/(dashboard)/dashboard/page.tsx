@@ -28,7 +28,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <ComplianceScoreCard
             score={dashboardMetrics.overallComplianceScore}
-            passingControls={dashboardMetrics.passingControls}
+            acceptedControls={dashboardMetrics.acceptedControls}
             totalControls={dashboardMetrics.totalControls}
           />
           <MetricCard
@@ -39,11 +39,11 @@ export default function DashboardPage() {
             variant={dashboardMetrics.criticalRisks > 0 ? "danger" : "success"}
           />
           <MetricCard
-            title="Passing Controls"
-            value={`${dashboardMetrics.passingControls}/${dashboardMetrics.totalControls}`}
-            subtitle={`${dashboardMetrics.failingControls} failing`}
+            title="Accepted Controls"
+            value={`${dashboardMetrics.acceptedControls}/${dashboardMetrics.totalControls}`}
+            subtitle={`${dashboardMetrics.needsReviewControls} needs review`}
             icon={CheckCircle}
-            variant={dashboardMetrics.failingControls > 0 ? "warning" : "success"}
+            variant={dashboardMetrics.evidenceNeededControls > 0 ? "warning" : "success"}
           />
           <MetricCard
             title="Evidence Coverage"

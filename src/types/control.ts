@@ -1,4 +1,4 @@
-export type ControlStatus = "Passing" | "Failing" | "Not Implemented" | "Needs Attention";
+export type ControlStatus = "Needs Review" | "Additional Evidence Needed" | "Accepted" | "Not Applicable";
 export type ControlCategory =
   | "Access Control"
   | "Data Protection"

@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ActivityItem } from "@/types";
 import {
   CheckCircle2,
-  XCircle,
   AlertTriangle,
   FileText,
   Upload,
@@ -20,8 +19,8 @@ interface ActivityFeedProps {
 }
 
 const activityIcons: Record<ActivityItem["type"], typeof CheckCircle2> = {
-  control_passed: CheckCircle2,
-  control_failed: XCircle,
+  control_accepted: CheckCircle2,
+  control_evidence_needed: AlertTriangle,
   risk_identified: AlertTriangle,
   policy_approved: FileText,
   evidence_uploaded: Upload,
@@ -31,8 +30,8 @@ const activityIcons: Record<ActivityItem["type"], typeof CheckCircle2> = {
 };
 
 const activityColors: Record<ActivityItem["type"], string> = {
-  control_passed: "text-emerald-600 dark:text-emerald-400",
-  control_failed: "text-red-600 dark:text-red-400",
+  control_accepted: "text-emerald-600 dark:text-emerald-400",
+  control_evidence_needed: "text-amber-600 dark:text-amber-400",
   risk_identified: "text-amber-600 dark:text-amber-400",
   policy_approved: "text-blue-600 dark:text-blue-400",
   evidence_uploaded: "text-purple-600 dark:text-purple-400",

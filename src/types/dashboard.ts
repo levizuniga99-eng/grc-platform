@@ -1,9 +1,10 @@
 export interface DashboardMetrics {
   overallComplianceScore: number;
   totalControls: number;
-  passingControls: number;
-  failingControls: number;
-  needsAttentionControls: number;
+  acceptedControls: number;
+  evidenceNeededControls: number;
+  needsReviewControls: number;
+  notApplicableControls: number;
   totalRisks: number;
   criticalRisks: number;
   highRisks: number;
@@ -17,7 +18,7 @@ export interface DashboardMetrics {
 
 export interface ActivityItem {
   id: string;
-  type: "control_passed" | "control_failed" | "risk_identified" | "policy_approved" | "evidence_uploaded" | "training_completed" | "vendor_reviewed" | "integration_synced";
+  type: "control_accepted" | "control_evidence_needed" | "risk_identified" | "policy_approved" | "evidence_uploaded" | "training_completed" | "vendor_reviewed" | "integration_synced";
   title: string;
   description: string;
   timestamp: string;

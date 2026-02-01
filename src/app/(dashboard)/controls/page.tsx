@@ -2,13 +2,18 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ControlsTable } from "@/components/controls/controls-table";
 import { controls } from "@/lib/mock-data/controls";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, FileQuestion, AlertTriangle, MinusCircle } from "lucide-react";
 
 export default function ControlsPage() {
-  const passingCount = controls.filter((c) => c.status === "Passing").length;
-  const failingCount = controls.filter((c) => c.status === "Failing").length;
-  const needsAttentionCount = controls.filter(
-    (c) => c.status === "Needs Attention"
+  const acceptedCount = controls.filter((c) => c.status === "Accepted").length;
+  const evidenceNeededCount = controls.filter(
+    (c) => c.status === "Additional Evidence Needed"
+  ).length;
+  const needsReviewCount = controls.filter(
+    (c) => c.status === "Needs Review"
+  ).length;
+  const notApplicableCount = controls.filter(
+    (c) => c.status === "Not Applicable"
   ).length;
 
   return (
@@ -27,7 +32,7 @@ export default function ControlsPage() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -35,8 +40,8 @@ export default function ControlsPage() {
                   <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{passingCount}</p>
-                  <p className="text-sm text-muted-foreground">Passing</p>
+                  <p className="text-2xl font-bold">{acceptedCount}</p>
+                  <p className="text-sm text-muted-foreground">Accepted</p>
                 </div>
               </div>
             </CardContent>
@@ -45,12 +50,12 @@ export default function ControlsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-red-100 dark:bg-red-900/30 p-2">
-                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <div className="rounded-lg bg-blue-100 dark:bg-blue-900/30 p-2">
+                  <FileQuestion className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{failingCount}</p>
-                  <p className="text-sm text-muted-foreground">Failing</p>
+                  <p className="text-2xl font-bold">{needsReviewCount}</p>
+                  <p className="text-sm text-muted-foreground">Needs Review</p>
                 </div>
               </div>
             </CardContent>
@@ -63,8 +68,22 @@ export default function ControlsPage() {
                   <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{needsAttentionCount}</p>
-                  <p className="text-sm text-muted-foreground">Needs Attention</p>
+                  <p className="text-2xl font-bold">{evidenceNeededCount}</p>
+                  <p className="text-sm text-muted-foreground">Evidence Needed</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-gray-100 dark:bg-gray-800 p-2">
+                  <MinusCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{notApplicableCount}</p>
+                  <p className="text-sm text-muted-foreground">Not Applicable</p>
                 </div>
               </div>
             </CardContent>
