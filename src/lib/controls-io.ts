@@ -193,7 +193,7 @@ export function parseCSVControls(csvContent: string): Control[] {
       frameworkIds: frameworks ? frameworks.split(";").map((f) => f.trim()) : [],
       lastTested: lastTested || new Date().toISOString().split("T")[0],
       nextReview: nextReview || new Date().toISOString().split("T")[0],
-      testFrequency: testFrequency || "Monthly",
+      testFrequency: (testFrequency || "Monthly") as Control["testFrequency"],
       implementationDetails: implementationDetails || "",
       evidenceIds: [],
       ...(failureReason && { failureReason }),
@@ -355,7 +355,7 @@ export function parseExcelControls(data: ArrayBuffer): Control[] {
       frameworkIds,
       lastTested: getValue("lastTested") || new Date().toISOString().split("T")[0],
       nextReview: getValue("nextReview") || new Date().toISOString().split("T")[0],
-      testFrequency: getValue("testFrequency") || "Monthly",
+      testFrequency: (getValue("testFrequency") || "Monthly") as Control["testFrequency"],
       implementationDetails: getValue("implementationDetails") || "",
       evidenceIds: [],
     };
@@ -395,140 +395,34 @@ export function exportControlsToExcel(controls: Control[]): XLSX.WorkBook {
 }
 
 export function downloadExcelFile(workbook: XLSX.WorkBook, filename: string) {
-  // Write workbook to base64 string
-  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "base64" });
-
-  // Create data URL and trigger download
-  const dataUrl = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${wbout}`;
-  const link = document.createElement("a");
-  link.href = dataUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Use XLSX writeFile which handles browser downloads automatically
+  XLSX.writeFile(workbook, filename);
 }
 
 export function generateControlsTemplate(): XLSX.WorkBook {
-  // Template data with example rows and instructions
+  // Simple template data
   const templateData = [
     {
       "Control ID": "CTL-001",
-      "Name": "Access Control Policy",
-      "Description": "Formal access control policy that defines user access requirements",
+      "Name": "Example Control",
+      "Description": "Description of the control",
       "Category": "Access Control",
       "Status": "Needs Review",
       "Type": "Manual",
       "Owner": "John Smith",
-      "Owner Email": "john.smith@company.com",
-      "Frameworks": "SOC2-CC6.1; ISO27001-A.9.1",
+      "Owner Email": "john@company.com",
+      "Frameworks": "SOC2-CC6.1",
       "Last Tested": "2024-01-15",
       "Next Review": "2024-04-15",
       "Test Frequency": "Quarterly",
-      "Implementation Details": "Policy documented in SharePoint, reviewed annually by security team",
-      "Failure Reason": "",
-    },
-    {
-      "Control ID": "CTL-002",
-      "Name": "Multi-Factor Authentication",
-      "Description": "MFA required for all user accounts accessing production systems",
-      "Category": "Access Control",
-      "Status": "Accepted",
-      "Type": "Automated",
-      "Owner": "IT Security Team",
-      "Owner Email": "security@company.com",
-      "Frameworks": "SOC2-CC6.1; SOC2-CC6.6",
-      "Last Tested": "2024-01-10",
-      "Next Review": "2024-02-10",
-      "Test Frequency": "Monthly",
-      "Implementation Details": "Okta MFA enforced via conditional access policies",
-      "Failure Reason": "",
-    },
-    {
-      "Control ID": "CTL-003",
-      "Name": "Data Encryption at Rest",
-      "Description": "All sensitive data encrypted at rest using AES-256",
-      "Category": "Data Protection",
-      "Status": "Accepted",
-      "Type": "Automated",
-      "Owner": "Cloud Team",
-      "Owner Email": "cloud@company.com",
-      "Frameworks": "SOC2-CC6.7; ISO27001-A.10.1",
-      "Last Tested": "2024-01-12",
-      "Next Review": "2024-04-12",
-      "Test Frequency": "Quarterly",
-      "Implementation Details": "AWS KMS used for all S3 buckets and RDS instances",
+      "Implementation Details": "How the control is implemented",
       "Failure Reason": "",
     },
   ];
 
-  // Create instructions sheet
-  const instructionsData = [
-    { "Field": "Control ID", "Required": "Yes", "Description": "Unique identifier for the control (e.g., CTL-001)", "Example": "CTL-001" },
-    { "Field": "Name", "Required": "Yes", "Description": "Short name/title of the control", "Example": "Access Control Policy" },
-    { "Field": "Description", "Required": "Yes", "Description": "Detailed description of what the control does", "Example": "Formal policy defining user access requirements" },
-    { "Field": "Category", "Required": "No", "Description": "Control category - see valid values below", "Example": "Access Control" },
-    { "Field": "Status", "Required": "No", "Description": "Current status - see valid values below", "Example": "Needs Review" },
-    { "Field": "Type", "Required": "No", "Description": "Automated or Manual", "Example": "Manual" },
-    { "Field": "Owner", "Required": "No", "Description": "Person or team responsible for the control", "Example": "John Smith" },
-    { "Field": "Owner Email", "Required": "No", "Description": "Email of the control owner", "Example": "john@company.com" },
-    { "Field": "Frameworks", "Required": "No", "Description": "Framework references separated by semicolons", "Example": "SOC2-CC6.1; ISO27001-A.9.1" },
-    { "Field": "Last Tested", "Required": "No", "Description": "Date of last test (YYYY-MM-DD)", "Example": "2024-01-15" },
-    { "Field": "Next Review", "Required": "No", "Description": "Date of next review (YYYY-MM-DD)", "Example": "2024-04-15" },
-    { "Field": "Test Frequency", "Required": "No", "Description": "How often the control is tested", "Example": "Quarterly" },
-    { "Field": "Implementation Details", "Required": "No", "Description": "Notes on how the control is implemented", "Example": "Policy in SharePoint" },
-    { "Field": "Failure Reason", "Required": "No", "Description": "Reason if control is failing (leave blank if passing)", "Example": "" },
-  ];
-
-  const validValuesData = [
-    { "Field": "Category", "Valid Values": "Access Control, Data Protection, Network Security, Incident Response, Change Management, Business Continuity, Vulnerability Management, Logging & Monitoring, Endpoint Security, Physical Security, Human Resources, Risk Management" },
-    { "Field": "Status", "Valid Values": "Needs Review, Additional Evidence Needed, Accepted, Not Applicable" },
-    { "Field": "Type", "Valid Values": "Automated, Manual" },
-    { "Field": "Test Frequency", "Valid Values": "Daily, Weekly, Monthly, Quarterly, Annually, As Needed" },
-  ];
-
-  // Create workbook with multiple sheets
   const workbook = XLSX.utils.book_new();
-
-  // Add template sheet
-  const templateSheet = XLSX.utils.json_to_sheet(templateData);
-
-  // Set column widths for better readability
-  templateSheet["!cols"] = [
-    { wch: 12 },  // Control ID
-    { wch: 30 },  // Name
-    { wch: 50 },  // Description
-    { wch: 18 },  // Category
-    { wch: 15 },  // Status
-    { wch: 12 },  // Type
-    { wch: 20 },  // Owner
-    { wch: 25 },  // Owner Email
-    { wch: 30 },  // Frameworks
-    { wch: 12 },  // Last Tested
-    { wch: 12 },  // Next Review
-    { wch: 15 },  // Test Frequency
-    { wch: 40 },  // Implementation Details
-    { wch: 30 },  // Failure Reason
-  ];
-
-  XLSX.utils.book_append_sheet(workbook, templateSheet, "Controls Template");
-
-  // Add instructions sheet
-  const instructionsSheet = XLSX.utils.json_to_sheet(instructionsData);
-  instructionsSheet["!cols"] = [
-    { wch: 20 },  // Field
-    { wch: 10 },  // Required
-    { wch: 50 },  // Description
-    { wch: 30 },  // Example
-  ];
-  XLSX.utils.book_append_sheet(workbook, instructionsSheet, "Field Instructions");
-
-  // Add valid values sheet
-  const validValuesSheet = XLSX.utils.json_to_sheet(validValuesData);
-  validValuesSheet["!cols"] = [
-    { wch: 15 },  // Field
-    { wch: 100 }, // Valid Values
-  ];
-  XLSX.utils.book_append_sheet(workbook, validValuesSheet, "Valid Values");
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Controls");
 
   return workbook;
 }
