@@ -28,6 +28,7 @@ import {
   Check,
 } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
+import { useAuth } from "@/contexts/auth-context";
 
 interface TeamMember {
   id: string;
@@ -45,8 +46,11 @@ const mockTeamMembers: TeamMember[] = [
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
+  const { user } = useAuth();
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
   const [saved, setSaved] = useState(false);
+
+  const isClient = user?.role === "client";
 
   // Local form state for organization settings
   const [orgName, setOrgName] = useState(settings.organizationName);
@@ -118,7 +122,12 @@ export default function SettingsPage() {
                   id="orgName"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
+                  disabled={!isClient}
+                  className={!isClient ? "bg-muted" : ""}
                 />
+                {!isClient && (
+                  <p className="text-xs text-muted-foreground">Only clients can edit this field</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="scopeName">Scope Name</Label>
@@ -127,7 +136,12 @@ export default function SettingsPage() {
                   value={scopeName}
                   onChange={(e) => setScopeName(e.target.value)}
                   placeholder="e.g., Platform or application name"
+                  disabled={!isClient}
+                  className={!isClient ? "bg-muted" : ""}
                 />
+                {!isClient && (
+                  <p className="text-xs text-muted-foreground">Only clients can edit this field</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="auditName">Audit Name</Label>
