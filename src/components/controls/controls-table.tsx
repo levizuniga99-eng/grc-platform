@@ -115,6 +115,15 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const controlCriteriaMap = useMemo(() => buildControlCriteriaMap(), []);
   const soc2Categories = useMemo(() => getSOC2Categories(), []);
 
+  // Helper to get criteria for a control (from framework map OR control's own frameworkIds)
+  const getControlCriteria = (control: Control): string[] => {
+    const fromMap = controlCriteriaMap.get(control.id) || [];
+    const fromControl = control.frameworkIds || [];
+    // Combine both sources and deduplicate
+    const combined = new Set([...fromMap, ...fromControl]);
+    return Array.from(combined);
+  };
+
   // Load saved controls on mount
   useEffect(() => {
     const savedControls = loadSavedControls();
@@ -264,7 +273,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       id: "criteria",
       header: "Criteria",
       cell: ({ row }) => {
-        const criteria = controlCriteriaMap.get(row.original.id) || [];
+        const criteria = getControlCriteria(row.original);
         if (criteria.length === 0) {
           return <span className="text-xs text-muted-foreground">—</span>;
         }
@@ -305,7 +314,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         return false;
       }
       if (criteriaFilter !== "all") {
-        const criteria = controlCriteriaMap.get(control.id) || [];
+        const criteria = getControlCriteria(control);
         // Check if any criteria starts with the selected category prefix (e.g., "CC1")
         const categoryPrefix = criteriaFilter.replace("soc2-", "").toUpperCase();
         const hasCriteria = criteria.some((c) => c.startsWith(categoryPrefix));
@@ -318,8 +327,8 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
 
     // Sort by SOC 2 criteria in numerical order
     result = result.sort((a, b) => {
-      const criteriaA = controlCriteriaMap.get(a.id) || [];
-      const criteriaB = controlCriteriaMap.get(b.id) || [];
+      const criteriaA = getControlCriteria(a);
+      const criteriaB = getControlCriteria(b);
       const primaryA = getPrimaryCriteria(criteriaA);
       const primaryB = getPrimaryCriteria(criteriaB);
       const parsedA = parseCriteriaCode(primaryA);
