@@ -369,7 +369,7 @@ export function parseExcelControls(data: ArrayBuffer): Control[] {
   });
 }
 
-export function exportControlsToExcel(controls: Control[]): Uint8Array {
+export function exportControlsToExcel(controls: Control[]): XLSX.WorkBook {
   const exportData = controls.map((control) => ({
     "Control ID": control.id,
     "Name": control.name,
@@ -391,14 +391,25 @@ export function exportControlsToExcel(controls: Control[]): Uint8Array {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Controls");
 
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" }) as Uint8Array;
+  return workbook;
 }
 
-export function downloadExcelFile(data: ArrayBuffer | Uint8Array, filename: string) {
-  // Ensure we have a Uint8Array for the Blob
-  const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const blob = new Blob([uint8Data], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+export function downloadExcelFile(workbook: XLSX.WorkBook, filename: string) {
+  // Write workbook to binary string and convert to blob
+  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+
+  // Convert binary string to ArrayBuffer
+  function s2ab(s: string): ArrayBuffer {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < s.length; i++) {
+      view[i] = s.charCodeAt(i) & 0xff;
+    }
+    return buf;
+  }
+
+  const blob = new Blob([s2ab(wbout)], {
+    type: "application/octet-stream"
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -410,7 +421,7 @@ export function downloadExcelFile(data: ArrayBuffer | Uint8Array, filename: stri
   URL.revokeObjectURL(url);
 }
 
-export function generateControlsTemplate(): Uint8Array {
+export function generateControlsTemplate(): XLSX.WorkBook {
   // Template data with example rows and instructions
   const templateData = [
     {
@@ -532,5 +543,5 @@ export function generateControlsTemplate(): Uint8Array {
   ];
   XLSX.utils.book_append_sheet(workbook, validValuesSheet, "Valid Values");
 
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" }) as Uint8Array;
+  return workbook;
 }
