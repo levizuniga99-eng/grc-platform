@@ -142,8 +142,19 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   };
 
   const handleImport = (importedControls: Control[]) => {
-    setControls(importedControls);
-    saveControls(importedControls);
+    setControls((prev) => {
+      // Create a map of existing controls by ID
+      const existingMap = new Map(prev.map((c) => [c.id, c]));
+
+      // Add or update with imported controls
+      importedControls.forEach((imported) => {
+        existingMap.set(imported.id, imported);
+      });
+
+      const merged = Array.from(existingMap.values());
+      saveControls(merged);
+      return merged;
+    });
     setRowSelection({});
   };
 
