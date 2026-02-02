@@ -26,7 +26,7 @@ import {
   parseCSVControls,
   parseJSONControls,
   parseExcelControls,
-  generateControlsTemplateCSV,
+  generateControlsTemplate,
 } from "@/lib/controls-io";
 import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table, FileDown } from "lucide-react";
 
@@ -63,8 +63,8 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
   };
 
   const handleDownloadTemplate = () => {
-    const csv = generateControlsTemplateCSV();
-    downloadFile(csv, "controls-import-template.csv", "text/csv");
+    const workbook = generateControlsTemplate();
+    downloadExcelFile(workbook, "controls-import-template.xlsx");
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -399,8 +399,44 @@ export function downloadExcelFile(workbook: XLSX.WorkBook, filename: string) {
   XLSX.writeFile(workbook, filename);
 }
 
-export function generateControlsTemplateCSV(): string {
-  return `ID,Name,Description,Category,Status,Type,Owner,Owner Email,Frameworks,Last Tested,Next Review,Test Frequency,Implementation Details,Failure Reason
-CTL-001,Access Control Policy,Formal access control policy,Access Control,Needs Review,Manual,John Smith,john@company.com,SOC2-CC6.1,2024-01-15,2024-04-15,Quarterly,Policy in SharePoint,
-CTL-002,Multi-Factor Authentication,MFA required for all users,Access Control,Accepted,Automated,IT Security,security@company.com,SOC2-CC6.1,2024-01-10,2024-02-10,Monthly,Okta MFA enforced,`;
+export function generateControlsTemplate(): XLSX.WorkBook {
+  const templateData = [
+    {
+      "ID": "CTL-001",
+      "Name": "Access Control Policy",
+      "Description": "Formal access control policy",
+      "Category": "Access Control",
+      "Status": "Needs Review",
+      "Type": "Manual",
+      "Owner": "John Smith",
+      "Owner Email": "john@company.com",
+      "Criteria": "CC6.1",
+      "Last Tested": "2024-01-15",
+      "Next Review": "2024-04-15",
+      "Test Frequency": "Quarterly",
+      "Implementation Details": "Policy in SharePoint",
+      "Failure Reason": "",
+    },
+    {
+      "ID": "CTL-002",
+      "Name": "Multi-Factor Authentication",
+      "Description": "MFA required for all users",
+      "Category": "Access Control",
+      "Status": "Accepted",
+      "Type": "Automated",
+      "Owner": "IT Security",
+      "Owner Email": "security@company.com",
+      "Criteria": "CC6.1; CC6.6",
+      "Last Tested": "2024-01-10",
+      "Next Review": "2024-02-10",
+      "Test Frequency": "Monthly",
+      "Implementation Details": "Okta MFA enforced",
+      "Failure Reason": "",
+    },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Controls");
+  return workbook;
 }
