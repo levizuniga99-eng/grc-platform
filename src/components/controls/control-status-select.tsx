@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { ControlStatus } from "@/types";
 import { CheckCircle, FileQuestion, AlertTriangle, MinusCircle } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 interface ControlStatusSelectProps {
   value: ControlStatus;
@@ -43,6 +44,14 @@ const statusOptions: { value: ControlStatus; label: string; icon: typeof CheckCi
 ];
 
 export function ControlStatusSelect({ value, onValueChange }: ControlStatusSelectProps) {
+  const { user } = useAuth();
+  const isClient = user?.role === "client";
+
+  // Clients cannot set status to "Accepted" - only auditors can
+  const availableOptions = isClient
+    ? statusOptions.filter((opt) => opt.value !== "Accepted")
+    : statusOptions;
+
   const currentOption = statusOptions.find((opt) => opt.value === value);
   const CurrentIcon = currentOption?.icon || CheckCircle;
 
@@ -60,7 +69,7 @@ export function ControlStatusSelect({ value, onValueChange }: ControlStatusSelec
         </SelectValue>
       </SelectTrigger>
       <SelectContent onClick={(e) => e.stopPropagation()}>
-        {statusOptions.map((option) => {
+        {availableOptions.map((option) => {
           const Icon = option.icon;
           return (
             <SelectItem key={option.value} value={option.value}>
