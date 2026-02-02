@@ -395,30 +395,17 @@ export function exportControlsToExcel(controls: Control[]): XLSX.WorkBook {
 }
 
 export function downloadExcelFile(workbook: XLSX.WorkBook, filename: string) {
-  // Write workbook to binary string and convert to blob
-  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+  // Write workbook to base64 string
+  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "base64" });
 
-  // Convert binary string to ArrayBuffer
-  function s2ab(s: string): ArrayBuffer {
-    const buf = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buf);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xff;
-    }
-    return buf;
-  }
-
-  const blob = new Blob([s2ab(wbout)], {
-    type: "application/octet-stream"
-  });
-  const url = URL.createObjectURL(blob);
+  // Create data URL and trigger download
+  const dataUrl = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${wbout}`;
   const link = document.createElement("a");
-  link.href = url;
+  link.href = dataUrl;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }
 
 export function generateControlsTemplate(): XLSX.WorkBook {
