@@ -188,6 +188,7 @@ export function AppSidebar() {
   const { user, logout } = useAuth();
 
   const navigation = user?.role === "auditor" ? auditorNavigation : clientNavigation;
+  const homeLink = user?.role === "auditor" ? "/audit-hub" : "/dashboard";
 
   const handleLogout = () => {
     logout();
@@ -200,7 +201,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
+              <Link href={homeLink}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <ShieldCheck className="size-4" />
                 </div>
