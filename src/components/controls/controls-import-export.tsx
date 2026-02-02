@@ -26,8 +26,9 @@ import {
   parseCSVControls,
   parseJSONControls,
   parseExcelControls,
+  generateControlsTemplate,
 } from "@/lib/controls-io";
-import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table, FileDown } from "lucide-react";
 
 interface ControlsImportExportProps {
   controls: Control[];
@@ -59,6 +60,11 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
     const excelData = exportControlsToExcel(controls);
     const date = new Date().toISOString().split("T")[0];
     downloadExcelFile(excelData, `controls-export-${date}.xlsx`);
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = generateControlsTemplate();
+    downloadExcelFile(templateData, "controls-import-template.xlsx");
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +173,16 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
         >
           <Upload className="h-4 w-4 mr-2" />
           Import
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDownloadTemplate}
+          title="Download import template"
+        >
+          <FileDown className="h-4 w-4 mr-2" />
+          Template
         </Button>
 
         <input
