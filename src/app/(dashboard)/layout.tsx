@@ -3,7 +3,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { SettingsProvider } from "@/contexts/settings-context";
 
 export default function DashboardLayout({
   children,
@@ -12,12 +11,10 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedRoute>
-      <SettingsProvider>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>{children}</SidebarInset>
-        </SidebarProvider>
-      </SettingsProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>{children}</SidebarInset>
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

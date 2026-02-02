@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { AuditClient } from "@/lib/mock-data/audits";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
 import { Building2, Calendar, ArrowRight } from "lucide-react";
+import { useSettings } from "@/contexts/settings-context";
 
 interface AuditsTableProps {
   audits: AuditClient[];
@@ -118,9 +119,20 @@ const statuses = ["In Progress", "Pending Review", "Completed", "Not Started"];
 
 export function AuditsTable({ audits }: AuditsTableProps) {
   const router = useRouter();
+  const { settings } = useSettings();
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredAudits = audits.filter((audit) => {
+  // Override audit data with current settings
+  const auditsWithSettings = useMemo(() => {
+    return audits.map((audit) => ({
+      ...audit,
+      organizationName: settings.organizationName,
+      scopeName: settings.scopeName,
+      auditName: settings.auditName,
+    }));
+  }, [audits, settings]);
+
+  const filteredAudits = auditsWithSettings.filter((audit) => {
     if (statusFilter !== "all" && audit.status !== statusFilter) return false;
     return true;
   });
