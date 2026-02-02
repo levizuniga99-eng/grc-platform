@@ -126,6 +126,18 @@ const columns: ColumnDef<CodeChange>[] = [
     ),
   },
   {
+    accessorKey: "reviewer",
+    header: "Reviewer",
+    cell: ({ row }) => {
+      const reviewer = row.getValue("reviewer") as string | null;
+      return (
+        <span className="text-sm text-muted-foreground">
+          {reviewer || "—"}
+        </span>
+      );
+    },
+  },
+  {
     accessorKey: "environment",
     header: "Environment",
     cell: ({ row }) => (
