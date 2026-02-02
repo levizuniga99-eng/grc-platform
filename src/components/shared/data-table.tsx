@@ -11,6 +11,7 @@ import {
   SortingState,
   ColumnFiltersState,
   RowSelectionState,
+  FilterFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -24,6 +25,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+
+// Global filter function that searches all string values in a row
+const globalFilterFn: FilterFn<unknown> = (row, _columnId, filterValue) => {
+  const search = String(filterValue).toLowerCase();
+  const rowData = row.original as Record<string, unknown>;
+
+  return Object.values(rowData).some((value) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string") {
+      return value.toLowerCase().includes(search);
+    }
+    if (typeof value === "number") {
+      return String(value).includes(search);
+    }
+    if (Array.isArray(value)) {
+      return value.some((v) => String(v).toLowerCase().includes(search));
+    }
+    return false;
+  });
+};
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -71,6 +92,7 @@ export function DataTable<TData, TValue>({
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
     enableRowSelection,
+    globalFilterFn,
     state: {
       sorting,
       columnFilters,
