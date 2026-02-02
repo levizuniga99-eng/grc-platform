@@ -369,7 +369,7 @@ export function parseExcelControls(data: ArrayBuffer): Control[] {
   });
 }
 
-export function exportControlsToExcel(controls: Control[]): ArrayBuffer {
+export function exportControlsToExcel(controls: Control[]): Uint8Array {
   const exportData = controls.map((control) => ({
     "Control ID": control.id,
     "Name": control.name,
@@ -391,11 +391,15 @@ export function exportControlsToExcel(controls: Control[]): ArrayBuffer {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Controls");
 
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  return XLSX.write(workbook, { type: "array", bookType: "xlsx" }) as Uint8Array;
 }
 
-export function downloadExcelFile(data: ArrayBuffer, filename: string) {
-  const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+export function downloadExcelFile(data: ArrayBuffer | Uint8Array, filename: string) {
+  // Ensure we have a Uint8Array for the Blob
+  const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const blob = new Blob([uint8Data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -406,7 +410,7 @@ export function downloadExcelFile(data: ArrayBuffer, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function generateControlsTemplate(): ArrayBuffer {
+export function generateControlsTemplate(): Uint8Array {
   // Template data with example rows and instructions
   const templateData = [
     {
@@ -528,5 +532,5 @@ export function generateControlsTemplate(): ArrayBuffer {
   ];
   XLSX.utils.book_append_sheet(workbook, validValuesSheet, "Valid Values");
 
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  return XLSX.write(workbook, { type: "array", bookType: "xlsx" }) as Uint8Array;
 }
