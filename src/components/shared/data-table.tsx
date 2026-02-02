@@ -169,7 +169,15 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing {table.getRowModel().rows.length} of {data.length} results
+          {(() => {
+            const filteredTotal = table.getFilteredRowModel().rows.length;
+            const pageSize = table.getState().pagination.pageSize;
+            const pageIndex = table.getState().pagination.pageIndex;
+            const start = pageIndex * pageSize + 1;
+            const end = Math.min((pageIndex + 1) * pageSize, filteredTotal);
+            if (filteredTotal === 0) return "No results";
+            return `Showing ${start}-${end} of ${filteredTotal} results`;
+          })()}
         </div>
         <div className="flex items-center gap-2">
           <Button
