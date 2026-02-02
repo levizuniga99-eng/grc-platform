@@ -37,7 +37,12 @@ export default function LoginPage() {
     try {
       const success = await login(email, password, selectedRole);
       if (success) {
-        router.push("/dashboard");
+        // Redirect based on role
+        if (selectedRole === "auditor") {
+          router.push("/audit-hub");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         setError("Invalid credentials");
       }
