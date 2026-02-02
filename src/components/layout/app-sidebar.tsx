@@ -17,6 +17,7 @@ import {
   LogOut,
   KeyRound,
   Settings,
+  GitPullRequest,
 } from "lucide-react";
 import {
   Sidebar,
@@ -74,6 +75,11 @@ const clientNavigation = [
         title: "Risks",
         url: "/risks",
         icon: AlertTriangle,
+      },
+      {
+        title: "Code Changes",
+        url: "/code-changes",
+        icon: GitPullRequest,
       },
       {
         title: "Policies",
@@ -147,6 +153,11 @@ const auditorNavigation = [
         title: "Risks",
         url: "/risks",
         icon: AlertTriangle,
+      },
+      {
+        title: "Code Changes",
+        url: "/code-changes",
+        icon: GitPullRequest,
       },
       {
         title: "Policies",
