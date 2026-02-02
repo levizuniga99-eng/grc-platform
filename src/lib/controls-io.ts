@@ -256,7 +256,7 @@ const headerMappings: Record<string, string[]> = {
   type: ["control type", "automation", "automated", "manual"],
   owner: ["owner", "control owner", "assigned to", "assignee", "responsible"],
   ownerEmail: ["owner email", "email", "contact email", "owner_email"],
-  frameworks: ["framework", "frameworks", "standard", "standards", "compliance framework"],
+  frameworks: ["framework", "frameworks", "standard", "standards", "compliance framework", "criteria"],
   lastTested: ["last tested", "last test", "last_tested", "tested date", "test date"],
   nextReview: ["next review", "review date", "next_review", "due date"],
   testFrequency: ["test frequency", "frequency", "testing frequency", "schedule"],

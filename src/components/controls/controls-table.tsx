@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { Control, ControlStatus } from "@/types";
 import { DataTable } from "@/components/shared/data-table";
 import { ControlFilters } from "./control-filters";
@@ -9,6 +9,8 @@ import { ControlDetailPanel } from "./control-detail-panel";
 import { ControlStatusSelect } from "./control-status-select";
 import { ControlsImportExport } from "./controls-import-export";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { frameworks } from "@/lib/mock-data/frameworks";
+import { Trash2 } from "lucide-react";
 
 const STORAGE_KEY = "grc-controls";
 
@@ -107,6 +110,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [criteriaFilter, setCriteriaFilter] = useState("all");
   const [selectedControl, setSelectedControl] = useState<Control | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const controlCriteriaMap = useMemo(() => buildControlCriteriaMap(), []);
   const soc2Categories = useMemo(() => getSOC2Categories(), []);
@@ -140,9 +144,45 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const handleImport = (importedControls: Control[]) => {
     setControls(importedControls);
     saveControls(importedControls);
+    setRowSelection({});
   };
 
+  const handleDeleteSelected = () => {
+    const selectedIndices = Object.keys(rowSelection).map(Number);
+    const selectedIds = selectedIndices.map((idx) => filteredAndSortedControls[idx]?.id).filter(Boolean);
+
+    setControls((prev) => {
+      const updated = prev.filter((control) => !selectedIds.includes(control.id));
+      saveControls(updated);
+      return updated;
+    });
+    setRowSelection({});
+  };
+
+  const selectedCount = Object.keys(rowSelection).length;
+
   const columns: ColumnDef<Control>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "id",
       header: "Control ID",
@@ -306,6 +346,16 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
               ))}
             </SelectContent>
           </Select>
+          {selectedCount > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteSelected}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete ({selectedCount})
+            </Button>
+          )}
         </div>
         <ControlsImportExport controls={controls} onImport={handleImport} />
       </div>
@@ -315,6 +365,9 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         data={filteredAndSortedControls}
         searchPlaceholder="Search controls..."
         onRowClick={(control) => setSelectedControl(control)}
+        enableRowSelection
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
       />
 
       <ControlDetailPanel
