@@ -20,11 +20,14 @@ import { Control } from "@/types";
 import {
   exportControlsToCSV,
   exportControlsToJSON,
+  exportControlsToExcel,
   downloadFile,
+  downloadExcelFile,
   parseCSVControls,
   parseJSONControls,
+  parseExcelControls,
 } from "@/lib/controls-io";
-import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table } from "lucide-react";
 
 interface ControlsImportExportProps {
   controls: Control[];
@@ -52,40 +55,73 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
     downloadFile(json, `controls-export-${date}.json`, "application/json");
   };
 
+  const handleExportExcel = () => {
+    const excelData = exportControlsToExcel(controls);
+    const date = new Date().toISOString().split("T")[0];
+    downloadExcelFile(excelData, `controls-export-${date}.xlsx`);
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      try {
-        let parsedControls: Control[];
+    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
 
-        if (file.name.endsWith(".csv")) {
-          parsedControls = parseCSVControls(content);
-        } else if (file.name.endsWith(".json")) {
-          parsedControls = parseJSONControls(content);
-        } else {
-          throw new Error("Unsupported file format. Please use CSV or JSON.");
+    if (isExcel) {
+      // Read Excel file as ArrayBuffer
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result as ArrayBuffer;
+          const parsedControls = parseExcelControls(data);
+          setImportResult({
+            success: true,
+            message: `Successfully parsed ${parsedControls.length} controls from ${file.name}`,
+            controls: parsedControls,
+          });
+          setImportDialogOpen(true);
+        } catch (error) {
+          setImportResult({
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to parse Excel file",
+          });
+          setImportDialogOpen(true);
         }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      // Read text files (CSV, JSON)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        try {
+          let parsedControls: Control[];
 
-        setImportResult({
-          success: true,
-          message: `Successfully parsed ${parsedControls.length} controls from ${file.name}`,
-          controls: parsedControls,
-        });
-        setImportDialogOpen(true);
-      } catch (error) {
-        setImportResult({
-          success: false,
-          message: error instanceof Error ? error.message : "Failed to parse file",
-        });
-        setImportDialogOpen(true);
-      }
-    };
+          if (file.name.endsWith(".csv")) {
+            parsedControls = parseCSVControls(content);
+          } else if (file.name.endsWith(".json")) {
+            parsedControls = parseJSONControls(content);
+          } else {
+            throw new Error("Unsupported file format. Please use Excel (.xlsx), CSV, or JSON.");
+          }
 
-    reader.readAsText(file);
+          setImportResult({
+            success: true,
+            message: `Successfully parsed ${parsedControls.length} controls from ${file.name}`,
+            controls: parsedControls,
+          });
+          setImportDialogOpen(true);
+        } catch (error) {
+          setImportResult({
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to parse file",
+          });
+          setImportDialogOpen(true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
     // Reset input so same file can be selected again
     event.target.value = "";
   };
@@ -109,6 +145,10 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportExcel}>
+              <Table className="h-4 w-4 mr-2" />
+              Export as Excel
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportCSV}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
               Export as CSV
@@ -132,7 +172,7 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,.json"
+          accept=".xlsx,.xls,.csv,.json"
           onChange={handleFileSelect}
           className="hidden"
         />

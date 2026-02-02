@@ -1,4 +1,5 @@
 import { Control, ControlStatus, ControlCategory } from "@/types";
+import * as XLSX from "xlsx";
 
 export interface ExportedControl {
   id: string;
@@ -238,4 +239,169 @@ export function parseJSONControls(jsonContent: string): Control[] {
       ...(item.failureReason && { failureReason: item.failureReason }),
     } as Control;
   });
+}
+
+// Excel parsing with column mapping
+interface ExcelRow {
+  [key: string]: string | number | undefined;
+}
+
+// Map common header variations to our field names
+const headerMappings: Record<string, string[]> = {
+  id: ["id", "control id", "control_id", "controlid", "ctrl id", "control #", "control number"],
+  name: ["name", "control name", "control_name", "controlname", "title", "control title"],
+  description: ["description", "desc", "control description", "details"],
+  category: ["category", "domain", "control category", "area", "type"],
+  status: ["status", "state", "control status"],
+  type: ["control type", "automation", "automated", "manual"],
+  owner: ["owner", "control owner", "assigned to", "assignee", "responsible"],
+  ownerEmail: ["owner email", "email", "contact email", "owner_email"],
+  frameworks: ["framework", "frameworks", "standard", "standards", "compliance framework"],
+  lastTested: ["last tested", "last test", "last_tested", "tested date", "test date"],
+  nextReview: ["next review", "review date", "next_review", "due date"],
+  testFrequency: ["test frequency", "frequency", "testing frequency", "schedule"],
+  implementationDetails: ["implementation", "implementation details", "notes", "details", "how implemented"],
+  failureReason: ["failure reason", "failure", "issue", "gap", "deficiency"],
+};
+
+function findMatchingHeader(headers: string[], fieldName: string): string | null {
+  const possibleNames = headerMappings[fieldName] || [fieldName];
+  const normalizedHeaders = headers.map(h => String(h).toLowerCase().trim());
+
+  for (const name of possibleNames) {
+    const index = normalizedHeaders.findIndex(h => h === name.toLowerCase());
+    if (index !== -1) {
+      return headers[index];
+    }
+  }
+
+  // Try partial matching
+  for (const name of possibleNames) {
+    const index = normalizedHeaders.findIndex(h => h.includes(name.toLowerCase()));
+    if (index !== -1) {
+      return headers[index];
+    }
+  }
+
+  return null;
+}
+
+export function parseExcelControls(data: ArrayBuffer): Control[] {
+  const workbook = XLSX.read(data, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet);
+
+  if (jsonData.length === 0) {
+    throw new Error("Excel file is empty or has no data rows");
+  }
+
+  // Get headers from first row
+  const headers = Object.keys(jsonData[0]);
+
+  // Build field mapping
+  const fieldMap: Record<string, string | null> = {
+    id: findMatchingHeader(headers, "id"),
+    name: findMatchingHeader(headers, "name"),
+    description: findMatchingHeader(headers, "description"),
+    category: findMatchingHeader(headers, "category"),
+    status: findMatchingHeader(headers, "status"),
+    type: findMatchingHeader(headers, "type"),
+    owner: findMatchingHeader(headers, "owner"),
+    ownerEmail: findMatchingHeader(headers, "ownerEmail"),
+    frameworks: findMatchingHeader(headers, "frameworks"),
+    lastTested: findMatchingHeader(headers, "lastTested"),
+    nextReview: findMatchingHeader(headers, "nextReview"),
+    testFrequency: findMatchingHeader(headers, "testFrequency"),
+    implementationDetails: findMatchingHeader(headers, "implementationDetails"),
+    failureReason: findMatchingHeader(headers, "failureReason"),
+  };
+
+  return jsonData.map((row, index) => {
+    const getValue = (field: string): string => {
+      const header = fieldMap[field];
+      if (!header) return "";
+      const value = row[header];
+      return value !== undefined ? String(value).trim() : "";
+    };
+
+    const status = getValue("status");
+    const validStatus = validStatuses.includes(status as ControlStatus)
+      ? (status as ControlStatus)
+      : "Needs Review";
+
+    const category = getValue("category");
+    const validCategory = validCategories.includes(category as ControlCategory)
+      ? (category as ControlCategory)
+      : "Access Control";
+
+    const controlType = getValue("type").toLowerCase();
+    const isAutomated = controlType.includes("auto");
+
+    const frameworksStr = getValue("frameworks");
+    const frameworkIds = frameworksStr
+      ? frameworksStr.split(/[;,]/).map(f => f.trim()).filter(Boolean)
+      : [];
+
+    const control: Control = {
+      id: getValue("id") || `CTL-${String(index + 1).padStart(3, "0")}`,
+      name: getValue("name") || "Unnamed Control",
+      description: getValue("description") || "",
+      category: validCategory,
+      status: validStatus,
+      type: isAutomated ? "Automated" : "Manual",
+      owner: getValue("owner") || "Unassigned",
+      ownerEmail: getValue("ownerEmail") || "",
+      frameworkIds,
+      lastTested: getValue("lastTested") || new Date().toISOString().split("T")[0],
+      nextReview: getValue("nextReview") || new Date().toISOString().split("T")[0],
+      testFrequency: getValue("testFrequency") || "Monthly",
+      implementationDetails: getValue("implementationDetails") || "",
+      evidenceIds: [],
+    };
+
+    const failureReason = getValue("failureReason");
+    if (failureReason) {
+      control.failureReason = failureReason;
+    }
+
+    return control;
+  });
+}
+
+export function exportControlsToExcel(controls: Control[]): ArrayBuffer {
+  const exportData = controls.map((control) => ({
+    "Control ID": control.id,
+    "Name": control.name,
+    "Description": control.description,
+    "Category": control.category,
+    "Status": control.status,
+    "Type": control.type,
+    "Owner": control.owner,
+    "Owner Email": control.ownerEmail,
+    "Frameworks": control.frameworkIds.join("; "),
+    "Last Tested": control.lastTested,
+    "Next Review": control.nextReview,
+    "Test Frequency": control.testFrequency,
+    "Implementation Details": control.implementationDetails,
+    "Failure Reason": control.failureReason || "",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Controls");
+
+  return XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+}
+
+export function downloadExcelFile(data: ArrayBuffer, filename: string) {
+  const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
