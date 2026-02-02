@@ -35,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
+import { getControlOwners } from "@/lib/mock-data/team-members";
 
 const categories: ControlCategory[] = [
   "Access Control",
@@ -216,19 +217,35 @@ export function ControlDetailPanel({
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs text-muted-foreground">Owner</label>
-                    <Input
+                    <Select
                       value={editedControl.owner}
-                      onChange={(e) => updateField("owner", e.target.value)}
-                      placeholder="Owner name"
-                    />
+                      onValueChange={(value) => {
+                        const owners = getControlOwners();
+                        const member = owners.find((m) => m.name === value);
+                        updateField("owner", value);
+                        if (member) {
+                          updateField("ownerEmail", member.email);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getControlOwners().map((member) => (
+                          <SelectItem key={member.id} value={member.name}>
+                            {member.name} ({member.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs text-muted-foreground">Owner Email</label>
                     <Input
                       value={editedControl.ownerEmail}
-                      onChange={(e) => updateField("ownerEmail", e.target.value)}
-                      placeholder="owner@company.com"
-                      type="email"
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
                 </>

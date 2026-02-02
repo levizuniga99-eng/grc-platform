@@ -29,25 +29,12 @@ import {
 } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
 import { useAuth } from "@/contexts/auth-context";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "auditor" | "viewer";
-  status: "active" | "pending";
-}
-
-const mockTeamMembers: TeamMember[] = [
-  { id: "1", name: "John Smith", email: "john@audit.com", role: "admin", status: "active" },
-  { id: "2", name: "Sarah Johnson", email: "sarah@audit.com", role: "auditor", status: "active" },
-  { id: "3", name: "Mike Chen", email: "mike@audit.com", role: "viewer", status: "pending" },
-];
+import { teamMembers, TeamMember } from "@/lib/mock-data/team-members";
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
   const { user } = useAuth();
-  const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [members] = useState<TeamMember[]>(teamMembers);
   const [saved, setSaved] = useState(false);
 
   const isClient = user?.role === "client";
@@ -364,7 +351,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {teamMembers.map((member) => (
+              {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
