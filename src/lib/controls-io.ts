@@ -286,7 +286,35 @@ function findMatchingHeader(headers: string[], fieldName: string): string | null
   return null;
 }
 
-export function parseExcelControls(data: ArrayBuffer): Control[] {
+export interface ColumnMapping {
+  field: string;
+  label: string;
+  sourceColumn: string | null;
+}
+
+export interface ParseExcelResult {
+  controls: Control[];
+  mappings: ColumnMapping[];
+}
+
+const fieldLabels: Record<string, string> = {
+  id: "Control ID",
+  name: "Name",
+  description: "Description",
+  category: "Category",
+  status: "Status",
+  type: "Type",
+  owner: "Owner",
+  ownerEmail: "Owner Email",
+  frameworks: "Criteria",
+  lastTested: "Last Tested",
+  nextReview: "Next Review",
+  testFrequency: "Test Frequency",
+  implementationDetails: "Implementation Details",
+  failureReason: "Failure Reason",
+};
+
+export function parseExcelControls(data: ArrayBuffer): ParseExcelResult {
   const workbook = XLSX.read(data, { type: "array" });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -317,7 +345,14 @@ export function parseExcelControls(data: ArrayBuffer): Control[] {
     failureReason: findMatchingHeader(headers, "failureReason"),
   };
 
-  return jsonData.map((row, index) => {
+  // Generate mappings for display
+  const mappings: ColumnMapping[] = Object.entries(fieldMap).map(([field, sourceColumn]) => ({
+    field,
+    label: fieldLabels[field] || field,
+    sourceColumn,
+  }));
+
+  const controls = jsonData.map((row, index) => {
     const getValue = (field: string): string => {
       const header = fieldMap[field];
       if (!header) return "";
@@ -367,6 +402,8 @@ export function parseExcelControls(data: ArrayBuffer): Control[] {
 
     return control;
   });
+
+  return { controls, mappings };
 }
 
 export function exportControlsToExcel(controls: Control[]): XLSX.WorkBook {

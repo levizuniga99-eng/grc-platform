@@ -27,8 +27,11 @@ import {
   parseJSONControls,
   parseExcelControls,
   generateControlsTemplate,
+  ColumnMapping,
 } from "@/lib/controls-io";
-import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table, FileDown } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, FileJson, AlertCircle, CheckCircle2, Table, FileDown, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ControlsImportExportProps {
   controls: Control[];
@@ -42,6 +45,7 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
     success: boolean;
     message: string;
     controls?: Control[];
+    mappings?: ColumnMapping[];
   } | null>(null);
 
   const handleExportCSV = () => {
@@ -79,11 +83,12 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
       reader.onload = (e) => {
         try {
           const data = e.target?.result as ArrayBuffer;
-          const parsedControls = parseExcelControls(data);
+          const { controls: parsedControls, mappings } = parseExcelControls(data);
           setImportResult({
             success: true,
             message: `Successfully parsed ${parsedControls.length} controls from ${file.name}`,
             controls: parsedControls,
+            mappings,
           });
           setImportDialogOpen(true);
         } catch (error) {
@@ -211,33 +216,75 @@ export function ControlsImportExport({ controls, onImport }: ControlsImportExpor
           </DialogHeader>
 
           {importResult?.success && importResult.controls && (
-            <div className="max-h-[300px] overflow-y-auto border rounded-md">
-              <table className="w-full text-sm">
-                <thead className="bg-muted sticky top-0">
-                  <tr>
-                    <th className="text-left p-2">ID</th>
-                    <th className="text-left p-2">Name</th>
-                    <th className="text-left p-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {importResult.controls.slice(0, 10).map((control) => (
-                    <tr key={control.id} className="border-t">
-                      <td className="p-2 font-mono text-xs">{control.id}</td>
-                      <td className="p-2">{control.name}</td>
-                      <td className="p-2">{control.status}</td>
-                    </tr>
-                  ))}
-                  {importResult.controls.length > 10 && (
-                    <tr className="border-t">
-                      <td colSpan={3} className="p-2 text-center text-muted-foreground">
-                        ... and {importResult.controls.length - 10} more controls
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <Tabs defaultValue="preview" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+                <TabsTrigger value="mapping">Column Mapping</TabsTrigger>
+              </TabsList>
+              <TabsContent value="preview">
+                <div className="max-h-[300px] overflow-y-auto border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="text-left p-2">ID</th>
+                        <th className="text-left p-2">Name</th>
+                        <th className="text-left p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importResult.controls.slice(0, 10).map((control) => (
+                        <tr key={control.id} className="border-t">
+                          <td className="p-2 font-mono text-xs">{control.id}</td>
+                          <td className="p-2">{control.name}</td>
+                          <td className="p-2">{control.status}</td>
+                        </tr>
+                      ))}
+                      {importResult.controls.length > 10 && (
+                        <tr className="border-t">
+                          <td colSpan={3} className="p-2 text-center text-muted-foreground">
+                            ... and {importResult.controls.length - 10} more controls
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+              <TabsContent value="mapping">
+                <div className="max-h-[300px] overflow-y-auto border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="text-left p-2">Your Column</th>
+                        <th className="text-center p-2"></th>
+                        <th className="text-left p-2">Maps To</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importResult.mappings?.map((mapping) => (
+                        <tr key={mapping.field} className="border-t">
+                          <td className="p-2">
+                            {mapping.sourceColumn ? (
+                              <Badge variant="secondary">{mapping.sourceColumn}</Badge>
+                            ) : (
+                              <span className="text-muted-foreground italic">Not found</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-center">
+                            <ArrowRight className="h-4 w-4 text-muted-foreground inline" />
+                          </td>
+                          <td className="p-2">
+                            <span className={mapping.sourceColumn ? "font-medium" : "text-muted-foreground"}>
+                              {mapping.label}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
 
           <DialogFooter>
