@@ -167,6 +167,21 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
     setRowSelection({});
   };
 
+  const handleControlUpdate = (updatedControl: Control) => {
+    setControls((prev) => {
+      const updated = prev.map((control) =>
+        control.id === updatedControl.id ? updatedControl : control
+      );
+      saveControls(updated);
+      return updated;
+    });
+
+    // Update selected control if it's the one being edited
+    if (selectedControl?.id === updatedControl.id) {
+      setSelectedControl(updatedControl);
+    }
+  };
+
   const handleDeleteSelected = () => {
     const selectedIndices = Object.keys(rowSelection).map(Number);
     const selectedIds = selectedIndices.map((idx) => filteredAndSortedControls[idx]?.id).filter(Boolean);
@@ -395,6 +410,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         open={!!selectedControl}
         onOpenChange={(open) => !open && setSelectedControl(null)}
         onStatusChange={handleStatusChange}
+        onControlUpdate={handleControlUpdate}
       />
     </div>
   );
