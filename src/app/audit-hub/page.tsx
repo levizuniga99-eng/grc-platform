@@ -1,14 +1,25 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { AuditsTable } from "@/components/audit-hub/audits-table";
 import { auditClients } from "@/lib/mock-data/audits";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   ClipboardCheck,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  LogOut,
 } from "lucide-react";
 
 export default function AuditHubPage() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
   const inProgressCount = auditClients.filter(
     (a) => a.status === "In Progress"
   ).length;
@@ -20,19 +31,51 @@ export default function AuditHubPage() {
   ).length;
   const totalClients = auditClients.length;
 
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-sidebar">
         <div className="container mx-auto px-6 py-4">
-          <h1 className="text-2xl font-bold">Audit Hub</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and access your client audits
-          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">GRC Platform</h1>
+                <p className="text-xs text-muted-foreground">Auditor Portal</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {user && (
+                <div className="text-right">
+                  <p className="text-sm font-medium">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+              )}
+              <ThemeToggle />
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-6">
-        <div className="grid gap-4 md:grid-cols-4 mb-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">Audit Hub</h2>
+          <p className="text-muted-foreground mt-1">
+            Manage and access your client audits
+          </p>
+        </div>
+
+      <div className="grid gap-4 md:grid-cols-4 mb-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">

@@ -82,7 +82,7 @@ export function ControlDetailPanel({
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
   const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [pendingStatus, setPendingStatus] = useState<ControlStatus | null>(null);
-  const { addMessage, addTask } = useControlMessages();
+  const { addMessage, reopenOrCreateTask } = useControlMessages();
   const { user } = useAuth();
   const isClient = user?.role === "client";
 
@@ -193,8 +193,8 @@ export function ControlDetailPanel({
       newStatus: "Additional Evidence Needed",
     });
 
-    // Create a task for the client
-    addTask({
+    // Create or reopen a task for the client
+    reopenOrCreateTask({
       controlId: control.id,
       controlName: control.name,
       requestMessage: message,

@@ -118,7 +118,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
   const [pendingStatusControl, setPendingStatusControl] = useState<Control | null>(null);
 
-  const { addMessage, addTask } = useControlMessages();
+  const { addMessage, reopenOrCreateTask, updateTaskStatusByControlId } = useControlMessages();
   const { user } = useAuth();
   const searchParams = useSearchParams();
 
@@ -201,6 +201,15 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       });
     }
 
+    // Sync task status with control status
+    // When control is "Needs Review" or "Accepted", mark related tasks as resolved
+    // When control is "Additional Evidence Needed", mark related tasks as open
+    if (newStatus === "Needs Review" || newStatus === "Accepted") {
+      updateTaskStatusByControlId(controlId, "resolved");
+    } else if (newStatus === "Additional Evidence Needed") {
+      updateTaskStatusByControlId(controlId, "open");
+    }
+
     setControls((prev) => {
       const updated = prev.map((c) =>
         c.id === controlId
@@ -243,8 +252,8 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       newStatus: "Additional Evidence Needed",
     });
 
-    // Create a task for the client
-    addTask({
+    // Create or reopen a task for the client
+    reopenOrCreateTask({
       controlId: pendingStatusControl.id,
       controlName: pendingStatusControl.name,
       requestMessage: message,

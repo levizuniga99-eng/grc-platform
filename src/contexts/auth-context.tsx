@@ -5,6 +5,12 @@ import { User, UserRole } from "@/types/auth";
 
 const AUTH_STORAGE_KEY = "grc-auth";
 
+// Use sessionStorage so each tab has its own independent session
+const getStorage = () => {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage;
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -44,14 +50,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setUser(parsed);
-      } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+    // Check for existing session (using sessionStorage for tab isolation)
+    const storage = getStorage();
+    if (storage) {
+      const stored = storage.getItem(AUTH_STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setUser(parsed);
+        } catch {
+          storage.removeItem(AUTH_STORAGE_KEY);
+        }
       }
     }
     setIsLoading(false);
@@ -61,11 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    const storage = getStorage();
+
     // Check demo users first
     const demoUser = demoUsers[email.toLowerCase()];
     if (demoUser && demoUser.password === password && demoUser.user.role === role) {
       setUser(demoUser.user);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser.user));
+      storage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(demoUser.user));
       return true;
     }
 
@@ -79,13 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     setUser(newUser);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+    storage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
     return true;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    const storage = getStorage();
+    storage?.removeItem(AUTH_STORAGE_KEY);
   };
 
   return (

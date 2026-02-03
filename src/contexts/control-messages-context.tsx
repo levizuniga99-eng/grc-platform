@@ -12,7 +12,9 @@ interface ControlMessagesContextType {
   tasks: ControlTask[];
   addMessage: (message: Omit<ControlMessage, "id" | "timestamp">) => void;
   addTask: (task: Omit<ControlTask, "id" | "createdAt" | "updatedAt">) => void;
+  reopenOrCreateTask: (task: Omit<ControlTask, "id" | "createdAt" | "updatedAt">) => void;
   updateTaskStatus: (taskId: string, status: ControlTask["status"]) => void;
+  updateTaskStatusByControlId: (controlId: string, status: ControlTask["status"]) => void;
   getMessagesForControl: (controlId: string) => ControlMessage[];
   getTasksForControl: (controlId: string) => ControlTask[];
   getOpenTasks: () => ControlTask[];
@@ -98,10 +100,55 @@ export function ControlMessagesProvider({ children }: { children: ReactNode }) {
     setTasks((prev) => [...prev, newTask]);
   };
 
+  const reopenOrCreateTask = (task: Omit<ControlTask, "id" | "createdAt" | "updatedAt">) => {
+    setTasks((prev) => {
+      // Find an existing task for this control (most recent one)
+      const existingTask = prev
+        .filter((t) => t.controlId === task.controlId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+      if (existingTask) {
+        // Reopen the existing task with updated info
+        return prev.map((t) =>
+          t.id === existingTask.id
+            ? {
+                ...t,
+                status: "open" as const,
+                requestMessage: task.requestMessage,
+                requestedBy: task.requestedBy,
+                requestedByRole: task.requestedByRole,
+                updatedAt: new Date().toISOString(),
+              }
+            : t
+        );
+      } else {
+        // Create a new task if none exists
+        const now = new Date().toISOString();
+        const newTask: ControlTask = {
+          ...task,
+          id: `task-${Date.now()}`,
+          createdAt: now,
+          updatedAt: now,
+        };
+        return [...prev, newTask];
+      }
+    });
+  };
+
   const updateTaskStatus = (taskId: string, status: ControlTask["status"]) => {
     setTasks((prev) =>
       prev.map((task) =>
         task.id === taskId
+          ? { ...task, status, updatedAt: new Date().toISOString() }
+          : task
+      )
+    );
+  };
+
+  const updateTaskStatusByControlId = (controlId: string, status: ControlTask["status"]) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.controlId === controlId
           ? { ...task, status, updatedAt: new Date().toISOString() }
           : task
       )
@@ -129,7 +176,9 @@ export function ControlMessagesProvider({ children }: { children: ReactNode }) {
         tasks,
         addMessage,
         addTask,
+        reopenOrCreateTask,
         updateTaskStatus,
+        updateTaskStatusByControlId,
         getMessagesForControl,
         getTasksForControl,
         getOpenTasks,
