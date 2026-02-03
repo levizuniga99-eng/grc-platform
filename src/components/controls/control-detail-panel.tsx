@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Control, ControlStatus, ControlCategory } from "@/types";
+import { Control, ControlStatus, ControlCategory, Evidence } from "@/types";
 import { ControlStatusSelect } from "./control-status-select";
 import { EvidenceRequestDialog } from "./evidence-request-dialog";
+import { EvidenceUploadDialog } from "./evidence-upload-dialog";
 import { useControlMessages } from "@/contexts/control-messages-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -36,6 +37,7 @@ import {
   Pencil,
   Save,
   X,
+  Upload,
 } from "lucide-react";
 import { format } from "date-fns";
 import { getControlOwners } from "@/lib/mock-data/team-members";
@@ -74,9 +76,11 @@ export function ControlDetailPanel({
   const [isEditing, setIsEditing] = useState(false);
   const [editedControl, setEditedControl] = useState<Control | null>(null);
   const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
+  const [showEvidenceUploadDialog, setShowEvidenceUploadDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ControlStatus | null>(null);
   const { addMessage, addTask } = useControlMessages();
   const { user } = useAuth();
+  const isClient = user?.role === "client";
 
   useEffect(() => {
     if (control) {
@@ -404,24 +408,40 @@ export function ControlDetailPanel({
             </div>
           </div>
 
-          {control.evidenceIds.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="text-sm font-medium mb-3">
-                  Evidence ({control.evidenceIds.length})
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {control.evidenceIds.map((id) => (
-                    <Badge key={id} variant="secondary">
-                      <FileText className="h-3 w-3 mr-1" />
-                      {id}
-                    </Badge>
-                  ))}
-                </div>
+          <Separator />
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium">
+                Evidence ({control.evidenceIds.length})
+              </h4>
+              {isClient && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowEvidenceUploadDialog(true)}
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  Upload
+                </Button>
+              )}
+            </div>
+            {control.evidenceIds.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {control.evidenceIds.map((id) => (
+                  <Badge key={id} variant="secondary">
+                    <FileText className="h-3 w-3 mr-1" />
+                    {id}
+                  </Badge>
+                ))}
               </div>
-            </>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No evidence uploaded yet.
+                {isClient && " Click Upload to add evidence for this control."}
+              </p>
+            )}
+          </div>
 
           <Separator />
 
@@ -441,6 +461,37 @@ export function ControlDetailPanel({
         }}
         controlName={control.name}
         onSubmit={handleEvidenceRequestSubmit}
+      />
+
+      {/* Evidence Upload Dialog */}
+      <EvidenceUploadDialog
+        open={showEvidenceUploadDialog}
+        onOpenChange={setShowEvidenceUploadDialog}
+        controlId={control.id}
+        controlName={control.name}
+        userName={user?.name || "Unknown"}
+        onUpload={(evidence: Evidence) => {
+          // Update control with new evidence ID
+          if (onControlUpdate) {
+            const updatedControl = {
+              ...control,
+              evidenceIds: [...control.evidenceIds, evidence.id],
+            };
+            onControlUpdate(updatedControl);
+          }
+
+          // Add message to control history
+          if (user) {
+            addMessage({
+              controlId: control.id,
+              type: "comment",
+              content: `Uploaded evidence: ${evidence.name} (${evidence.type})`,
+              author: user.name,
+              authorEmail: user.email,
+              authorRole: user.role,
+            });
+          }
+        }}
       />
     </Sheet>
   );
