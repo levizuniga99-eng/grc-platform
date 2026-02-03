@@ -46,6 +46,29 @@ export function ControlMessagesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Listen for storage changes from other tabs/windows (auditor <-> client sync)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === MESSAGES_STORAGE_KEY && e.newValue) {
+        try {
+          setMessages(JSON.parse(e.newValue));
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      if (e.key === TASKS_STORAGE_KEY && e.newValue) {
+        try {
+          setTasks(JSON.parse(e.newValue));
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   // Save to localStorage when data changes
   useEffect(() => {
     localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messages));

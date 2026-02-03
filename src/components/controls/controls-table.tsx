@@ -140,6 +140,30 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
     }
   }, []);
 
+  // Listen for storage changes from other tabs/windows (auditor <-> client sync)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const updatedControls = JSON.parse(e.newValue);
+          setControls(updatedControls);
+          // Update selected control if it was modified
+          if (selectedControl) {
+            const updated = updatedControls.find((c: Control) => c.id === selectedControl.id);
+            if (updated) {
+              setSelectedControl(updated);
+            }
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [selectedControl]);
+
   const handleStatusChange = (controlId: string, newStatus: ControlStatus) => {
     const control = controls.find((c) => c.id === controlId);
 
