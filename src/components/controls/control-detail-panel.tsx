@@ -5,6 +5,7 @@ import { Control, ControlStatus, ControlCategory, Evidence } from "@/types";
 import { ControlStatusSelect } from "./control-status-select";
 import { EvidenceRequestDialog } from "./evidence-request-dialog";
 import { EvidenceUploadDialog } from "./evidence-upload-dialog";
+import { EvidenceViewerDialog } from "./evidence-viewer-dialog";
 import { useControlMessages } from "@/contexts/control-messages-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -77,10 +78,47 @@ export function ControlDetailPanel({
   const [editedControl, setEditedControl] = useState<Control | null>(null);
   const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
   const [showEvidenceUploadDialog, setShowEvidenceUploadDialog] = useState(false);
+  const [showEvidenceViewer, setShowEvidenceViewer] = useState(false);
+  const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
+  const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
   const [pendingStatus, setPendingStatus] = useState<ControlStatus | null>(null);
   const { addMessage, addTask } = useControlMessages();
   const { user } = useAuth();
   const isClient = user?.role === "client";
+
+  // Load evidence from localStorage
+  useEffect(() => {
+    const loadEvidence = () => {
+      try {
+        const saved = localStorage.getItem("grc-evidence");
+        if (saved) {
+          setEvidenceList(JSON.parse(saved));
+        }
+      } catch {
+        // Ignore
+      }
+    };
+
+    loadEvidence();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "grc-evidence") {
+        loadEvidence();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const handleViewEvidence = (evidenceId: string) => {
+    const evidence = evidenceList.find((e) => e.id === evidenceId);
+    if (evidence) {
+      setSelectedEvidence(evidence);
+      setShowEvidenceViewer(true);
+    }
+  };
 
   useEffect(() => {
     if (control) {
@@ -428,12 +466,20 @@ export function ControlDetailPanel({
             </div>
             {control.evidenceIds.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {control.evidenceIds.map((id) => (
-                  <Badge key={id} variant="secondary">
-                    <FileText className="h-3 w-3 mr-1" />
-                    {id}
-                  </Badge>
-                ))}
+                {control.evidenceIds.map((id) => {
+                  const evidence = evidenceList.find((e) => e.id === id);
+                  return (
+                    <Badge
+                      key={id}
+                      variant="secondary"
+                      className="cursor-pointer hover:bg-secondary/80 transition-colors"
+                      onClick={() => handleViewEvidence(id)}
+                    >
+                      <FileText className="h-3 w-3 mr-1" />
+                      {evidence?.name || id}
+                    </Badge>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -491,7 +537,17 @@ export function ControlDetailPanel({
               authorRole: user.role,
             });
           }
+
+          // Refresh evidence list
+          setEvidenceList((prev) => [...prev, evidence]);
         }}
+      />
+
+      {/* Evidence Viewer Dialog */}
+      <EvidenceViewerDialog
+        open={showEvidenceViewer}
+        onOpenChange={setShowEvidenceViewer}
+        evidence={selectedEvidence}
       />
     </Sheet>
   );

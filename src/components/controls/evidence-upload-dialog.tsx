@@ -43,6 +43,7 @@ const evidenceTypes: EvidenceType[] = [
 ];
 
 const EVIDENCE_STORAGE_KEY = "grc-evidence";
+const EVIDENCE_FILES_KEY = "grc-evidence-files";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -87,9 +88,18 @@ export function EvidenceUploadDialog({
 
     setIsUploading(true);
 
+    // Read file as base64
+    const fileContent = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(selectedFile);
+    });
+
+    const evidenceId = `EV-${Date.now()}`;
+
     // Create evidence object
     const newEvidence: Evidence = {
-      id: `EV-${Date.now()}`,
+      id: evidenceId,
       name: name.trim(),
       description: description.trim(),
       type,
@@ -102,18 +112,33 @@ export function EvidenceUploadDialog({
       mimeType: selectedFile.type || "application/octet-stream",
     };
 
-    // Save to localStorage
+    // Save evidence metadata to localStorage
     try {
       const saved = localStorage.getItem(EVIDENCE_STORAGE_KEY);
       const existingEvidence: Evidence[] = saved ? JSON.parse(saved) : [];
       const updated = [...existingEvidence, newEvidence];
       localStorage.setItem(EVIDENCE_STORAGE_KEY, JSON.stringify(updated));
 
+      // Save file content separately (to avoid bloating evidence metadata)
+      const savedFiles = localStorage.getItem(EVIDENCE_FILES_KEY);
+      const existingFiles: Record<string, { content: string; filename: string }> = savedFiles ? JSON.parse(savedFiles) : {};
+      existingFiles[evidenceId] = {
+        content: fileContent,
+        filename: selectedFile.name,
+      };
+      localStorage.setItem(EVIDENCE_FILES_KEY, JSON.stringify(existingFiles));
+
       // Trigger storage event for other tabs
       window.dispatchEvent(
         new StorageEvent("storage", {
           key: EVIDENCE_STORAGE_KEY,
           newValue: JSON.stringify(updated),
+        })
+      );
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: EVIDENCE_FILES_KEY,
+          newValue: JSON.stringify(existingFiles),
         })
       );
     } catch {
