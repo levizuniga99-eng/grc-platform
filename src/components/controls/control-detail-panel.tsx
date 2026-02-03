@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Control, ControlStatus, ControlCategory } from "@/types";
 import { ControlStatusSelect } from "./control-status-select";
+import { EvidenceRequestDialog } from "./evidence-request-dialog";
+import { useControlMessages } from "@/contexts/control-messages-context";
+import { useAuth } from "@/contexts/auth-context";
 import {
   Sheet,
   SheetContent,
@@ -36,6 +39,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { getControlOwners } from "@/lib/mock-data/team-members";
+import { ControlMessages } from "./control-messages";
 
 const categories: ControlCategory[] = [
   "Access Control",
@@ -69,6 +73,10 @@ export function ControlDetailPanel({
 }: ControlDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedControl, setEditedControl] = useState<Control | null>(null);
+  const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<ControlStatus | null>(null);
+  const { addMessage, addTask } = useControlMessages();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (control) {
@@ -93,6 +101,73 @@ export function ControlDetailPanel({
 
   const updateField = <K extends keyof Control>(field: K, value: Control[K]) => {
     setEditedControl((prev) => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const handleStatusChange = (newStatus: ControlStatus) => {
+    if (newStatus === "Additional Evidence Needed" && user?.role === "auditor") {
+      // Show dialog to request evidence details
+      setPendingStatus(newStatus);
+      setShowEvidenceDialog(true);
+    } else {
+      // Record status change in message history
+      if (user && control) {
+        addMessage({
+          controlId: control.id,
+          type: "status_change",
+          content: `Status changed from ${control.status} to ${newStatus}`,
+          author: user.name,
+          authorEmail: user.email,
+          authorRole: user.role,
+          previousStatus: control.status,
+          newStatus: newStatus,
+        });
+      }
+      onStatusChange?.(control.id, newStatus);
+    }
+  };
+
+  const handleEvidenceRequestSubmit = (message: string) => {
+    if (!control || !user) return;
+
+    // Add evidence request message to control history
+    addMessage({
+      controlId: control.id,
+      type: "evidence_request",
+      content: message,
+      author: user.name,
+      authorEmail: user.email,
+      authorRole: user.role,
+    });
+
+    // Also add status change message
+    addMessage({
+      controlId: control.id,
+      type: "status_change",
+      content: `Status changed from ${control.status} to Additional Evidence Needed`,
+      author: user.name,
+      authorEmail: user.email,
+      authorRole: user.role,
+      previousStatus: control.status,
+      newStatus: "Additional Evidence Needed",
+    });
+
+    // Create a task for the client
+    addTask({
+      controlId: control.id,
+      controlName: control.name,
+      requestMessage: message,
+      requestedBy: user.name,
+      requestedByRole: user.role,
+      status: "open",
+      assignedTo: control.owner,
+    });
+
+    // Apply the status change
+    if (pendingStatus) {
+      onStatusChange?.(control.id, pendingStatus);
+    }
+
+    setPendingStatus(null);
   };
 
   return (
@@ -155,9 +230,7 @@ export function ControlDetailPanel({
           <div className="mt-1">
             <ControlStatusSelect
               value={control.status}
-              onValueChange={(newStatus) =>
-                onStatusChange?.(control.id, newStatus)
-              }
+              onValueChange={handleStatusChange}
             />
           </div>
         </div>
@@ -349,8 +422,26 @@ export function ControlDetailPanel({
               </div>
             </>
           )}
+
+          <Separator />
+
+          {/* Activity & Messages Section */}
+          <ControlMessages controlId={control.id} />
         </div>
       </SheetContent>
+
+      {/* Evidence Request Dialog */}
+      <EvidenceRequestDialog
+        open={showEvidenceDialog}
+        onOpenChange={(open) => {
+          setShowEvidenceDialog(open);
+          if (!open) {
+            setPendingStatus(null);
+          }
+        }}
+        controlName={control.name}
+        onSubmit={handleEvidenceRequestSubmit}
+      />
     </Sheet>
   );
 }

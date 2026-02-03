@@ -3,11 +3,10 @@ import { FrameworksOverview } from "@/components/dashboard/frameworks-overview";
 import { ControlsOverview } from "@/components/dashboard/controls-overview";
 import { RisksOverview } from "@/components/dashboard/risks-overview";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { TasksList } from "@/components/dashboard/tasks-list";
+import { EvidenceRequestsList } from "@/components/dashboard/evidence-requests-list";
 import {
   dashboardMetrics,
   recentActivity,
-  upcomingTasks,
   controlsStatusData,
   frameworksProgress,
   risksBySeverity,
@@ -30,7 +29,7 @@ export default function DashboardPage() {
 
         <div className="grid gap-4 lg:grid-cols-4">
           <ActivityFeed activities={recentActivity} />
-          <TasksList tasks={upcomingTasks} />
+          <EvidenceRequestsList />
         </div>
       </div>
     </>

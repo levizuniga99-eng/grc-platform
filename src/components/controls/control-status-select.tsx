@@ -46,6 +46,10 @@ const statusOptions: { value: ControlStatus; label: string; icon: typeof CheckCi
 export function ControlStatusSelect({ value, onValueChange }: ControlStatusSelectProps) {
   const { user } = useAuth();
   const isClient = user?.role === "client";
+  const isAccepted = value === "Accepted";
+
+  // Clients cannot change status if already Accepted
+  const isDisabled = isClient && isAccepted;
 
   // Clients cannot set status to "Accepted" - only auditors can
   const availableOptions = isClient
@@ -56,9 +60,9 @@ export function ControlStatusSelect({ value, onValueChange }: ControlStatusSelec
   const CurrentIcon = currentOption?.icon || CheckCircle;
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange} disabled={isDisabled}>
       <SelectTrigger
-        className="w-[180px] h-8"
+        className={`w-[180px] h-8 ${isDisabled ? "opacity-70 cursor-not-allowed" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <SelectValue>

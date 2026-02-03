@@ -18,6 +18,7 @@ import {
   KeyRound,
   Settings,
   GitPullRequest,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +46,11 @@ const clientNavigation = [
         title: "Dashboard",
         url: "/dashboard",
         icon: LayoutDashboard,
+      },
+      {
+        title: "Tasks",
+        url: "/tasks",
+        icon: ClipboardList,
       },
     ],
   },

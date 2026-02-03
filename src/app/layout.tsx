@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { ControlMessagesProvider } from "@/contexts/control-messages-context";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,7 +40,9 @@ export default function RootLayout({
         >
           <AuthProvider>
             <SettingsProvider>
-              {children}
+              <ControlMessagesProvider>
+                {children}
+              </ControlMessagesProvider>
             </SettingsProvider>
           </AuthProvider>
         </ThemeProvider>

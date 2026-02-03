@@ -12,6 +12,7 @@ import {
   ColumnFiltersState,
   RowSelectionState,
   FilterFn,
+  OnChangeFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -27,7 +28,8 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 // Global filter function that searches all string values in a row
-const globalFilterFn: FilterFn<unknown> = (row, _columnId, filterValue) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const globalFilterFn: FilterFn<any> = (row, _columnId, filterValue) => {
   const search = String(filterValue).toLowerCase();
   const rowData = row.original as Record<string, unknown>;
 
@@ -54,7 +56,7 @@ interface DataTableProps<TData, TValue> {
   actions?: React.ReactNode;
   enableRowSelection?: boolean;
   rowSelection?: RowSelectionState;
-  onRowSelectionChange?: (selection: RowSelectionState) => void;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 }
 
 export function DataTable<TData, TValue>({
