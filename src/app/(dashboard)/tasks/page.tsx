@@ -13,15 +13,61 @@ import {
 } from "@/components/ui/select";
 import { useControlMessages } from "@/contexts/control-messages-context";
 import { useAuth } from "@/contexts/auth-context";
+import { Control, ControlStatus } from "@/types";
 import { ClipboardList, Clock, CheckCircle2, AlertCircle, User } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
 
+const CONTROLS_STORAGE_KEY = "grc-controls";
+
 export default function TasksPage() {
-  const { tasks, updateTaskStatus } = useControlMessages();
+  const { tasks, updateTaskStatus, addMessage } = useControlMessages();
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Function to update control status in localStorage
+  const updateControlStatus = (controlId: string, newStatus: ControlStatus) => {
+    try {
+      const saved = localStorage.getItem(CONTROLS_STORAGE_KEY);
+      if (saved) {
+        const controls: Control[] = JSON.parse(saved);
+        const updated = controls.map((c) =>
+          c.id === controlId ? { ...c, status: newStatus } : c
+        );
+        localStorage.setItem(CONTROLS_STORAGE_KEY, JSON.stringify(updated));
+        // Trigger storage event for other tabs
+        window.dispatchEvent(new StorageEvent("storage", {
+          key: CONTROLS_STORAGE_KEY,
+          newValue: JSON.stringify(updated),
+        }));
+      }
+    } catch {
+      // Ignore errors
+    }
+  };
+
+  // Handle task status change - when resolved, also update control to "Needs Review"
+  const handleTaskStatusChange = (taskId: string, newStatus: "open" | "in_progress" | "resolved", task: typeof tasks[0]) => {
+    updateTaskStatus(taskId, newStatus);
+
+    // When client marks task as resolved, change control status to "Needs Review"
+    if (newStatus === "resolved" && user) {
+      updateControlStatus(task.controlId, "Needs Review");
+
+      // Add message to control history
+      addMessage({
+        controlId: task.controlId,
+        type: "status_change",
+        content: `Status changed from Additional Evidence Needed to Needs Review`,
+        author: user.name,
+        authorEmail: user.email,
+        authorRole: user.role,
+        previousStatus: "Additional Evidence Needed",
+        newStatus: "Needs Review",
+      });
+    }
+  };
 
   const filteredTasks = statusFilter === "all"
     ? tasks
@@ -174,15 +220,15 @@ export default function TasksPage() {
                       {user?.role === "client" && task.status !== "resolved" && (
                         <Select
                           value={task.status}
-                          onValueChange={(value) => updateTaskStatus(task.id, value as "open" | "in_progress" | "resolved")}
+                          onValueChange={(value) => handleTaskStatusChange(task.id, value as "open" | "in_progress" | "resolved", task)}
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[160px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="open">Open</SelectItem>
                             <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="resolved">Resolved</SelectItem>
+                            <SelectItem value="resolved">Submit for Review</SelectItem>
                           </SelectContent>
                         </Select>
                       )}

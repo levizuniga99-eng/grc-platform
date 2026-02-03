@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { Control, ControlStatus } from "@/types";
 import { DataTable } from "@/components/shared/data-table";
@@ -119,6 +120,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
 
   const { addMessage, addTask } = useControlMessages();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
 
   const controlCriteriaMap = useMemo(() => buildControlCriteriaMap(), []);
   const soc2Categories = useMemo(() => getSOC2Categories(), []);
@@ -139,6 +141,17 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       setControls(savedControls);
     }
   }, []);
+
+  // Auto-open control panel if highlight param is present (from Tasks page "View Control")
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && controls.length > 0) {
+      const controlToOpen = controls.find((c) => c.id === highlightId);
+      if (controlToOpen) {
+        setSelectedControl(controlToOpen);
+      }
+    }
+  }, [searchParams, controls]);
 
   // Listen for storage changes from other tabs/windows (auditor <-> client sync)
   useEffect(() => {
