@@ -8,6 +8,9 @@ import { ControlFilters } from "./control-filters";
 import { ControlDetailPanel } from "./control-detail-panel";
 import { ControlStatusSelect } from "./control-status-select";
 import { ControlsImportExport } from "./controls-import-export";
+import { EvidenceRequestDialog } from "./evidence-request-dialog";
+import { useControlMessages } from "@/contexts/control-messages-context";
+import { useAuth } from "@/contexts/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -111,6 +114,11 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   const [criteriaFilter, setCriteriaFilter] = useState("all");
   const [selectedControl, setSelectedControl] = useState<Control | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
+  const [pendingStatusControl, setPendingStatusControl] = useState<Control | null>(null);
+
+  const { addMessage, addTask } = useControlMessages();
+  const { user } = useAuth();
 
   const controlCriteriaMap = useMemo(() => buildControlCriteriaMap(), []);
   const soc2Categories = useMemo(() => getSOC2Categories(), []);
@@ -133,11 +141,34 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
   }, []);
 
   const handleStatusChange = (controlId: string, newStatus: ControlStatus) => {
+    const control = controls.find((c) => c.id === controlId);
+
+    // If auditor is setting to "Additional Evidence Needed", show the dialog
+    if (newStatus === "Additional Evidence Needed" && user?.role === "auditor" && control) {
+      setPendingStatusControl(control);
+      setShowEvidenceDialog(true);
+      return;
+    }
+
+    // Record status change in message history
+    if (user && control) {
+      addMessage({
+        controlId: control.id,
+        type: "status_change",
+        content: `Status changed from ${control.status} to ${newStatus}`,
+        author: user.name,
+        authorEmail: user.email,
+        authorRole: user.role,
+        previousStatus: control.status,
+        newStatus: newStatus,
+      });
+    }
+
     setControls((prev) => {
-      const updated = prev.map((control) =>
-        control.id === controlId
-          ? { ...control, status: newStatus }
-          : control
+      const updated = prev.map((c) =>
+        c.id === controlId
+          ? { ...c, status: newStatus }
+          : c
       );
       saveControls(updated);
       return updated;
@@ -148,6 +179,62 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         prev ? { ...prev, status: newStatus } : null
       );
     }
+  };
+
+  const handleEvidenceRequestSubmit = (message: string) => {
+    if (!pendingStatusControl || !user) return;
+
+    // Add evidence request message to control history
+    addMessage({
+      controlId: pendingStatusControl.id,
+      type: "evidence_request",
+      content: message,
+      author: user.name,
+      authorEmail: user.email,
+      authorRole: user.role,
+    });
+
+    // Also add status change message
+    addMessage({
+      controlId: pendingStatusControl.id,
+      type: "status_change",
+      content: `Status changed from ${pendingStatusControl.status} to Additional Evidence Needed`,
+      author: user.name,
+      authorEmail: user.email,
+      authorRole: user.role,
+      previousStatus: pendingStatusControl.status,
+      newStatus: "Additional Evidence Needed",
+    });
+
+    // Create a task for the client
+    addTask({
+      controlId: pendingStatusControl.id,
+      controlName: pendingStatusControl.name,
+      requestMessage: message,
+      requestedBy: user.name,
+      requestedByRole: user.role,
+      status: "open",
+      assignedTo: pendingStatusControl.owner,
+    });
+
+    // Apply the status change
+    setControls((prev) => {
+      const updated = prev.map((c) =>
+        c.id === pendingStatusControl.id
+          ? { ...c, status: "Additional Evidence Needed" as ControlStatus }
+          : c
+      );
+      saveControls(updated);
+      return updated;
+    });
+
+    if (selectedControl?.id === pendingStatusControl.id) {
+      setSelectedControl((prev) =>
+        prev ? { ...prev, status: "Additional Evidence Needed" } : null
+      );
+    }
+
+    setPendingStatusControl(null);
   };
 
   const handleImport = (importedControls: Control[]) => {
@@ -411,6 +498,18 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
         onOpenChange={(open) => !open && setSelectedControl(null)}
         onStatusChange={handleStatusChange}
         onControlUpdate={handleControlUpdate}
+      />
+
+      <EvidenceRequestDialog
+        open={showEvidenceDialog}
+        onOpenChange={(open) => {
+          setShowEvidenceDialog(open);
+          if (!open) {
+            setPendingStatusControl(null);
+          }
+        }}
+        controlName={pendingStatusControl?.name || ""}
+        onSubmit={handleEvidenceRequestSubmit}
       />
     </div>
   );

@@ -51,9 +51,9 @@ export function ControlStatusSelect({ value, onValueChange }: ControlStatusSelec
   // Clients cannot change status if already Accepted
   const isDisabled = isClient && isAccepted;
 
-  // Clients cannot set status to "Accepted" - only auditors can
+  // Clients cannot set status to "Accepted" or "Additional Evidence Needed" - only auditors can
   const availableOptions = isClient
-    ? statusOptions.filter((opt) => opt.value !== "Accepted")
+    ? statusOptions.filter((opt) => opt.value !== "Accepted" && opt.value !== "Additional Evidence Needed")
     : statusOptions;
 
   const currentOption = statusOptions.find((opt) => opt.value === value);
