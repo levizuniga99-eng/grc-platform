@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-10 w-10 text-primary" />
-            <h1 className="text-3xl font-bold">GRC Platform</h1>
+            <h1 className="text-3xl font-bold">Cornerstone GRC</h1>
           </div>
           <p className="text-muted-foreground">
             Governance, Risk & Compliance Management

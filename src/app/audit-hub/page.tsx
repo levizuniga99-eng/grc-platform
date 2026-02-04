@@ -46,7 +46,7 @@ export default function AuditHubPage() {
                 <ShieldCheck className="size-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">GRC Platform</h1>
+                <h1 className="text-xl font-bold">Cornerstone GRC</h1>
                 <p className="text-xs text-muted-foreground">Auditor Portal</p>
               </div>
             </div>

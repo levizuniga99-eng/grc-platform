@@ -231,7 +231,7 @@ export function AppSidebar() {
                   <ShieldCheck className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">GRC Platform</span>
+                  <span className="font-semibold">Cornerstone GRC</span>
                   <span className="text-xs text-muted-foreground">
                     {user?.role === "auditor" ? "Auditor Portal" : "Client Portal"}
                   </span>

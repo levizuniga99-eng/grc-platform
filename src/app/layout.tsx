@@ -18,7 +18,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GRC Platform - Compliance & Risk Management",
+  title: "Cornerstone GRC - Compliance & Risk Management",
   description: "Governance, Risk, and Compliance platform for SOC 2, HIPAA, ISO 27001, and GDPR compliance management.",
 };
 
