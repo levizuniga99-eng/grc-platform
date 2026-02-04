@@ -18,6 +18,7 @@ import { Building2, Calendar, ArrowRight } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
 import { FinalReportUploadDialog } from "./final-report-upload-dialog";
 import { Control } from "@/types";
+import { controls as mockControls } from "@/lib/mock-data/controls";
 
 interface AuditsTableProps {
   audits: AuditClient[];
@@ -43,7 +44,7 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
   const [audits, setAudits] = useState<AuditClient[]>(initialAudits);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [pendingCompletionAudit, setPendingCompletionAudit] = useState<AuditClient | null>(null);
-  const [controls, setControls] = useState<Control[]>([]);
+  const [controls, setControls] = useState<Control[]>(mockControls);
 
   // Load audits from localStorage on mount
   useEffect(() => {
@@ -57,15 +58,18 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
     }
   }, []);
 
-  // Load controls from localStorage to get real counts
+  // Load controls from localStorage to get real counts (fallback to mock data)
   useEffect(() => {
     const loadControls = () => {
       const saved = localStorage.getItem(CONTROLS_STORAGE_KEY);
       if (saved) {
         try {
-          setControls(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          if (parsed.length > 0) {
+            setControls(parsed);
+          }
         } catch {
-          // Ignore errors
+          // Use mock data if parse fails
         }
       }
     };
@@ -168,9 +172,9 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
       auditName: settings.auditName,
       auditPeriodStart: settings.auditPeriodStart,
       auditPeriodEnd: settings.auditPeriodEnd,
-      controlsTotal: controlStats.total || audit.controlsTotal,
+      controlsTotal: controlStats.total,
       controlsPassing: controlStats.passing,
-      progress: controlStats.total > 0 ? controlStats.progress : audit.progress,
+      progress: controlStats.progress,
     }));
   }, [audits, settings, controlStats]);
 
