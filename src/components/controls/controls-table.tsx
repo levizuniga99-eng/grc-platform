@@ -177,11 +177,11 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [selectedControl]);
 
-  const handleStatusChange = (controlId: string, newStatus: ControlStatus) => {
+  const handleStatusChange = (controlId: string, newStatus: ControlStatus, skipDialog?: boolean) => {
     const control = controls.find((c) => c.id === controlId);
 
-    // If auditor is setting to "Additional Evidence Needed", show the dialog
-    if (newStatus === "Additional Evidence Needed" && user?.role === "auditor" && control) {
+    // If auditor is setting to "Additional Evidence Needed", show the dialog (unless already handled)
+    if (newStatus === "Additional Evidence Needed" && user?.role === "auditor" && control && !skipDialog) {
       setPendingStatusControl(control);
       setShowEvidenceDialog(true);
       return;
@@ -280,6 +280,7 @@ export function ControlsTable({ controls: initialControls }: ControlsTableProps)
       );
     }
 
+    setShowEvidenceDialog(false);
     setPendingStatusControl(null);
   };
 

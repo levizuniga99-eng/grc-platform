@@ -63,7 +63,7 @@ interface ControlDetailPanelProps {
   control: Control | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStatusChange?: (controlId: string, status: ControlStatus) => void;
+  onStatusChange?: (controlId: string, status: ControlStatus, skipDialog?: boolean) => void;
   onControlUpdate?: (control: Control) => void;
 }
 
@@ -204,15 +204,17 @@ export function ControlDetailPanel({
       assignedTo: control.owner,
     });
 
-    // Apply the status change
+    // Apply the status change (skipDialog=true since we already handled it)
     if (pendingStatus) {
-      onStatusChange?.(control.id, pendingStatus);
+      onStatusChange?.(control.id, pendingStatus, true);
     }
 
+    setShowEvidenceDialog(false);
     setPendingStatus(null);
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
@@ -496,7 +498,9 @@ export function ControlDetailPanel({
         </div>
       </SheetContent>
 
-      {/* Evidence Request Dialog */}
+    </Sheet>
+
+      {/* Evidence Request Dialog - outside Sheet to avoid portal conflicts */}
       <EvidenceRequestDialog
         open={showEvidenceDialog}
         onOpenChange={(open) => {
@@ -549,6 +553,6 @@ export function ControlDetailPanel({
         onOpenChange={setShowEvidenceViewer}
         evidence={selectedEvidence}
       />
-    </Sheet>
+    </>
   );
 }

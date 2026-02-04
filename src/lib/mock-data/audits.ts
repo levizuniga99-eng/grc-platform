@@ -10,7 +10,9 @@ export interface AuditClient {
   controlsPassing: number;
   lastActivity: string;
   auditor: string;
-  dueDate: string;
+  auditPeriodStart: string;
+  auditPeriodEnd: string;
+  finalReportId?: string;
 }
 
 export const auditClients: AuditClient[] = [
@@ -26,6 +28,7 @@ export const auditClients: AuditClient[] = [
     controlsPassing: 46,
     lastActivity: "2024-01-15T10:30:00Z",
     auditor: "Sarah Chen",
-    dueDate: "2024-03-15",
+    auditPeriodStart: "2025-01-01",
+    auditPeriodEnd: "2025-12-31",
   },
 ];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { AuditClient } from "@/lib/mock-data/audits";
@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { Building2, Calendar, ArrowRight } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
+import { FinalReportUploadDialog } from "./final-report-upload-dialog";
 
 interface AuditsTableProps {
   audits: AuditClient[];
@@ -28,99 +29,98 @@ const statusColors: Record<string, string> = {
   "Not Started": "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
 };
 
-const columns: ColumnDef<AuditClient>[] = [
-  {
-    accessorKey: "organizationName",
-    header: "Client",
-    cell: ({ row }) => (
-      <div className="flex items-start gap-3">
-        <div className="rounded-lg bg-muted p-2">
-          <Building2 className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p className="font-medium">{row.getValue("organizationName")}</p>
-          <p className="text-xs text-muted-foreground">{row.original.scopeName}</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "auditName",
-    header: "Audit",
-    cell: ({ row }) => (
-      <div>
-        <p className="font-medium">{row.getValue("auditName")}</p>
-        <p className="text-xs text-muted-foreground">{row.original.framework}</p>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${statusColors[status]}`}>
-          {status}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "progress",
-    header: "Progress",
-    cell: ({ row }) => {
-      const progress = row.getValue("progress") as number;
-      const passing = row.original.controlsPassing;
-      const total = row.original.controlsTotal;
-      return (
-        <div className="w-32">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">{passing}/{total} controls</span>
-            <span className="font-medium">{progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "lastActivity",
-    header: "Last Activity",
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("lastActivity"));
-      return (
-        <span className="text-sm text-muted-foreground">
-          {formatDistanceToNow(date, { addSuffix: true })}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "dueDate",
-    header: "Due Date",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Calendar className="h-4 w-4" />
-        {format(new Date(row.getValue("dueDate")), "MMM d, yyyy")}
-      </div>
-    ),
-  },
-  {
-    id: "action",
-    header: "",
-    cell: () => (
-      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-    ),
-  },
-];
+const auditStatuses: AuditClient["status"][] = ["Not Started", "In Progress", "Pending Review", "Completed"];
 
-const statuses = ["In Progress", "Pending Review", "Completed", "Not Started"];
+const AUDITS_STORAGE_KEY = "grc-audits";
+const AUDIT_REPORTS_STORAGE_KEY = "grc-audit-reports";
 
-export function AuditsTable({ audits }: AuditsTableProps) {
+export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
   const router = useRouter();
   const { settings } = useSettings();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [audits, setAudits] = useState<AuditClient[]>(initialAudits);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [pendingCompletionAudit, setPendingCompletionAudit] = useState<AuditClient | null>(null);
+
+  // Load audits from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(AUDITS_STORAGE_KEY);
+    if (saved) {
+      try {
+        setAudits(JSON.parse(saved));
+      } catch {
+        // Use initial data if parse fails
+      }
+    }
+  }, []);
+
+  // Save audits to localStorage when they change
+  const saveAudits = (updatedAudits: AuditClient[]) => {
+    localStorage.setItem(AUDITS_STORAGE_KEY, JSON.stringify(updatedAudits));
+  };
+
+  const handleStatusChange = (auditId: string, newStatus: AuditClient["status"]) => {
+    const audit = audits.find((a) => a.id === auditId);
+    if (!audit) return;
+
+    // If completing, require final report upload
+    if (newStatus === "Completed") {
+      setPendingCompletionAudit(audit);
+      setShowReportDialog(true);
+      return;
+    }
+
+    // Otherwise, update status directly
+    setAudits((prev) => {
+      const updated = prev.map((a) =>
+        a.id === auditId
+          ? { ...a, status: newStatus, lastActivity: new Date().toISOString() }
+          : a
+      );
+      saveAudits(updated);
+      return updated;
+    });
+  };
+
+  const handleReportSubmit = (file: File) => {
+    if (!pendingCompletionAudit) return;
+
+    // Store the report reference
+    const reportId = `report-${Date.now()}`;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const reports = JSON.parse(localStorage.getItem(AUDIT_REPORTS_STORAGE_KEY) || "{}");
+      reports[reportId] = {
+        id: reportId,
+        auditId: pendingCompletionAudit.id,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        content: reader.result,
+      };
+      localStorage.setItem(AUDIT_REPORTS_STORAGE_KEY, JSON.stringify(reports));
+    };
+    reader.readAsDataURL(file);
+
+    // Update audit status to completed
+    setAudits((prev) => {
+      const updated = prev.map((a) =>
+        a.id === pendingCompletionAudit.id
+          ? {
+              ...a,
+              status: "Completed" as const,
+              lastActivity: new Date().toISOString(),
+              finalReportId: reportId,
+            }
+          : a
+      );
+      saveAudits(updated);
+      return updated;
+    });
+
+    setPendingCompletionAudit(null);
+  };
 
   // Override audit data with current settings
   const auditsWithSettings = useMemo(() => {
@@ -142,6 +142,105 @@ export function AuditsTable({ audits }: AuditsTableProps) {
     router.push("/dashboard");
   };
 
+  const columns: ColumnDef<AuditClient>[] = [
+    {
+      accessorKey: "organizationName",
+      header: "Client",
+      cell: ({ row }) => (
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-muted p-2">
+            <Building2 className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-medium">{row.getValue("organizationName")}</p>
+            <p className="text-xs text-muted-foreground">{row.original.scopeName}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "auditName",
+      header: "Audit",
+      cell: ({ row }) => (
+        <div>
+          <p className="font-medium">{row.getValue("auditName")}</p>
+          <p className="text-xs text-muted-foreground">{row.original.framework}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as AuditClient["status"];
+        const auditId = row.original.id;
+        return (
+          <Select
+            value={status}
+            onValueChange={(value) => handleStatusChange(auditId, value as AuditClient["status"])}
+          >
+            <SelectTrigger
+              className={`w-[140px] h-8 text-xs font-medium border-0 ${statusColors[status]}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent onClick={(e) => e.stopPropagation()}>
+              {auditStatuses.map((s) => (
+                <SelectItem key={s} value={s}>
+                  <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${statusColors[s]}`}>
+                    {s}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      },
+    },
+    {
+      accessorKey: "progress",
+      header: "Progress",
+      cell: ({ row }) => {
+        const progress = row.getValue("progress") as number;
+        const passing = row.original.controlsPassing;
+        const total = row.original.controlsTotal;
+        return (
+          <div className="w-32">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-muted-foreground">{passing}/{total} controls</span>
+              <span className="font-medium">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "auditPeriodStart",
+      header: "Audit Period",
+      cell: ({ row }) => {
+        const startDate = new Date(row.original.auditPeriodStart);
+        const endDate = new Date(row.original.auditPeriodEnd);
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {format(startDate, "M/d/yy")} to {format(endDate, "M/d/yy")}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "action",
+      header: "",
+      cell: () => (
+        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
@@ -151,7 +250,7 @@ export function AuditsTable({ audits }: AuditsTableProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {statuses.map((status) => (
+            {auditStatuses.map((status) => (
               <SelectItem key={status} value={status}>
                 {status}
               </SelectItem>
@@ -165,6 +264,18 @@ export function AuditsTable({ audits }: AuditsTableProps) {
         data={filteredAudits}
         searchPlaceholder="Search clients or audits..."
         onRowClick={handleRowClick}
+      />
+
+      <FinalReportUploadDialog
+        open={showReportDialog}
+        onOpenChange={(open) => {
+          setShowReportDialog(open);
+          if (!open) {
+            setPendingCompletionAudit(null);
+          }
+        }}
+        auditName={pendingCompletionAudit?.auditName || ""}
+        onSubmit={handleReportSubmit}
       />
     </div>
   );
