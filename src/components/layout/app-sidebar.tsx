@@ -37,6 +37,8 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useSettings } from "@/contexts/settings-context";
+import { format } from "date-fns";
 
 const clientNavigation = [
   {
@@ -203,9 +205,15 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { settings } = useSettings();
 
   const navigation = user?.role === "auditor" ? auditorNavigation : clientNavigation;
   const homeLink = user?.role === "auditor" ? "/audit-hub" : "/dashboard";
+
+  // Format audit period
+  const auditPeriod = settings.auditPeriodStart && settings.auditPeriodEnd
+    ? `${format(new Date(settings.auditPeriodStart), "M/d/yy")} - ${format(new Date(settings.auditPeriodEnd), "M/d/yy")}`
+    : null;
 
   const handleLogout = () => {
     logout();
@@ -232,6 +240,12 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {auditPeriod && (
+          <div className="px-3 py-2 group-data-[collapsible=icon]:hidden">
+            <p className="text-xs font-medium text-muted-foreground">Audit Period</p>
+            <p className="text-sm font-medium">{auditPeriod}</p>
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         {navigation.map((group) => (
