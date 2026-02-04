@@ -45,6 +45,8 @@ export default function SettingsPage() {
   const [auditName, setAuditName] = useState(settings.auditName);
   const [industry, setIndustry] = useState(settings.industry);
   const [timezone, setTimezone] = useState(settings.timezone);
+  const [auditPeriodStart, setAuditPeriodStart] = useState(settings.auditPeriodStart);
+  const [auditPeriodEnd, setAuditPeriodEnd] = useState(settings.auditPeriodEnd);
 
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -70,6 +72,8 @@ export default function SettingsPage() {
       auditName: auditName,
       industry: industry,
       timezone: timezone,
+      auditPeriodStart: auditPeriodStart,
+      auditPeriodEnd: auditPeriodEnd,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -138,6 +142,26 @@ export default function SettingsPage() {
                   onChange={(e) => setAuditName(e.target.value)}
                   placeholder="e.g., SOC 2 Type II Audit 2024"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Audit Period</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="auditPeriodStart"
+                    type="date"
+                    value={auditPeriodStart}
+                    onChange={(e) => setAuditPeriodStart(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <Input
+                    id="auditPeriodEnd"
+                    type="date"
+                    value={auditPeriodEnd}
+                    onChange={(e) => setAuditPeriodEnd(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="industry">Industry</Label>

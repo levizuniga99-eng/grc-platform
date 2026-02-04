@@ -8,6 +8,8 @@ interface OrganizationSettings {
   auditName: string;
   industry: string;
   timezone: string;
+  auditPeriodStart: string;
+  auditPeriodEnd: string;
 }
 
 interface SettingsContextType {
@@ -23,6 +25,8 @@ const defaultSettings: OrganizationSettings = {
   auditName: "SOC 2 Type II Audit 2024",
   industry: "technology",
   timezone: "pst",
+  auditPeriodStart: "2025-01-01",
+  auditPeriodEnd: "2025-12-31",
 };
 
 const SettingsContext = createContext<SettingsContextType | null>(null);

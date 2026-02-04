@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { Building2, Calendar, ArrowRight } from "lucide-react";
 import { useSettings } from "@/contexts/settings-context";
 import { FinalReportUploadDialog } from "./final-report-upload-dialog";
+import { Control } from "@/types";
 
 interface AuditsTableProps {
   audits: AuditClient[];
@@ -33,6 +34,7 @@ const auditStatuses: AuditClient["status"][] = ["Not Started", "In Progress", "P
 
 const AUDITS_STORAGE_KEY = "grc-audits";
 const AUDIT_REPORTS_STORAGE_KEY = "grc-audit-reports";
+const CONTROLS_STORAGE_KEY = "grc-controls";
 
 export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
   const router = useRouter();
@@ -41,6 +43,7 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
   const [audits, setAudits] = useState<AuditClient[]>(initialAudits);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [pendingCompletionAudit, setPendingCompletionAudit] = useState<AuditClient | null>(null);
+  const [controls, setControls] = useState<Control[]>([]);
 
   // Load audits from localStorage on mount
   useEffect(() => {
@@ -52,6 +55,32 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
         // Use initial data if parse fails
       }
     }
+  }, []);
+
+  // Load controls from localStorage to get real counts
+  useEffect(() => {
+    const loadControls = () => {
+      const saved = localStorage.getItem(CONTROLS_STORAGE_KEY);
+      if (saved) {
+        try {
+          setControls(JSON.parse(saved));
+        } catch {
+          // Ignore errors
+        }
+      }
+    };
+
+    loadControls();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === CONTROLS_STORAGE_KEY) {
+        loadControls();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   // Save audits to localStorage when they change
@@ -122,15 +151,28 @@ export function AuditsTable({ audits: initialAudits }: AuditsTableProps) {
     setPendingCompletionAudit(null);
   };
 
-  // Override audit data with current settings
+  // Calculate real control stats
+  const controlStats = useMemo(() => {
+    const total = controls.length;
+    const passing = controls.filter((c) => c.status === "Accepted").length;
+    const progress = total > 0 ? Math.round((passing / total) * 100) : 0;
+    return { total, passing, progress };
+  }, [controls]);
+
+  // Override audit data with current settings and real control stats
   const auditsWithSettings = useMemo(() => {
     return audits.map((audit) => ({
       ...audit,
       organizationName: settings.organizationName,
       scopeName: settings.scopeName,
       auditName: settings.auditName,
+      auditPeriodStart: settings.auditPeriodStart,
+      auditPeriodEnd: settings.auditPeriodEnd,
+      controlsTotal: controlStats.total || audit.controlsTotal,
+      controlsPassing: controlStats.passing,
+      progress: controlStats.total > 0 ? controlStats.progress : audit.progress,
     }));
-  }, [audits, settings]);
+  }, [audits, settings, controlStats]);
 
   const filteredAudits = auditsWithSettings.filter((audit) => {
     if (statusFilter !== "all" && audit.status !== statusFilter) return false;
