@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, ClipboardCheck, Loader2 } from "lucide-react";
+import { Users, ClipboardCheck, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,22 +55,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <Shield className="h-10 w-10 text-primary" />
-            <h1 className="text-3xl font-bold">Cornerstone GRC</h1>
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Image
+              src="/logo.png"
+              alt="Cornerstone GRC"
+              width={320}
+              height={160}
+              priority
+              unoptimized
+            />
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-slate-300">
             Governance, Risk & Compliance Management
           </p>
         </div>
 
-        <Card>
+        <Card className="bg-zinc-900 border-zinc-700 shadow-2xl">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-zinc-100">Sign In</CardTitle>
+            <CardDescription className="text-zinc-400">
               Select your portal and enter your credentials
             </CardDescription>
           </CardHeader>
@@ -77,20 +84,20 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Portal Selection */}
               <div className="space-y-3">
-                <Label>Select Portal</Label>
+                <Label className="text-zinc-300">Select Portal</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedRole("client")}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       selectedRole === "client"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        ? "border-zinc-400 bg-zinc-800"
+                        : "border-zinc-700 hover:border-zinc-500 bg-zinc-800/50"
                     }`}
                   >
-                    <Users className={`h-6 w-6 mb-2 ${selectedRole === "client" ? "text-primary" : "text-muted-foreground"}`} />
-                    <p className="font-medium">Client Portal</p>
-                    <p className="text-xs text-muted-foreground">
+                    <Users className={`h-6 w-6 mb-2 ${selectedRole === "client" ? "text-zinc-200" : "text-zinc-500"}`} />
+                    <p className="font-medium text-zinc-200">Client Portal</p>
+                    <p className="text-xs text-zinc-500">
                       Manage your compliance
                     </p>
                   </button>
@@ -100,13 +107,13 @@ export default function LoginPage() {
                     onClick={() => setSelectedRole("auditor")}
                     className={`p-4 rounded-lg border-2 transition-all text-left ${
                       selectedRole === "auditor"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        ? "border-zinc-400 bg-zinc-800"
+                        : "border-zinc-700 hover:border-zinc-500 bg-zinc-800/50"
                     }`}
                   >
-                    <ClipboardCheck className={`h-6 w-6 mb-2 ${selectedRole === "auditor" ? "text-primary" : "text-muted-foreground"}`} />
-                    <p className="font-medium">Audit Hub</p>
-                    <p className="text-xs text-muted-foreground">
+                    <ClipboardCheck className={`h-6 w-6 mb-2 ${selectedRole === "auditor" ? "text-zinc-200" : "text-zinc-500"}`} />
+                    <p className="font-medium text-zinc-200">Audit Hub</p>
+                    <p className="text-xs text-zinc-500">
                       Review & audit clients
                     </p>
                   </button>
@@ -116,7 +123,7 @@ export default function LoginPage() {
               {/* Credentials */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-zinc-300">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -124,11 +131,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
+                    className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-zinc-300">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -136,6 +144,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
+                    className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
                   />
                 </div>
               </div>
@@ -156,15 +165,15 @@ export default function LoginPage() {
               </Button>
 
               {/* Demo credentials hint */}
-              <div className="rounded-lg bg-muted p-3 text-sm">
-                <p className="font-medium mb-1">Demo Credentials:</p>
-                <p className="text-muted-foreground text-xs">
+              <div className="rounded-lg bg-zinc-800 border border-zinc-700 p-3 text-sm">
+                <p className="font-medium mb-1 text-zinc-300">Demo Credentials:</p>
+                <p className="text-zinc-500 text-xs">
                   Client: client@company.com / demo123
                 </p>
-                <p className="text-muted-foreground text-xs">
+                <p className="text-zinc-500 text-xs">
                   Auditor: auditor@auditfirm.com / demo123
                 </p>
-                <p className="text-muted-foreground text-xs mt-1 italic">
+                <p className="text-zinc-500 text-xs mt-1 italic">
                   Or use any email/password to test
                 </p>
               </div>

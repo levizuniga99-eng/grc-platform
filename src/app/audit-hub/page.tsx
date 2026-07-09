@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   Clock,
   CheckCircle2,
-  ShieldCheck,
   LogOut,
 } from "lucide-react";
 
@@ -42,11 +41,15 @@ export default function AuditHubPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <ShieldCheck className="size-5" />
+              <div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/pillar-transparent.png"
+                  alt="Cornerstone GRC"
+                  className="h-14 w-auto"
+                />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Cornerstone GRC</h1>
                 <p className="text-xs text-muted-foreground">Auditor Portal</p>
               </div>
             </div>

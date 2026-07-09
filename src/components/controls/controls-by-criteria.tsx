@@ -14,13 +14,18 @@ const STORAGE_KEY = "grc-controls";
 
 interface ControlsByCriteriaProps {
   controls: Control[];
+  frameworkId?: string;
+}
+
+interface ControlWithCriteria extends Control {
+  criteriaCodesForCategory: string[];
 }
 
 interface CriteriaGroup {
   id: string;
   name: string;
   description: string;
-  controls: Control[];
+  controls: ControlWithCriteria[];
 }
 
 function loadSavedControls(): Control[] | null {
@@ -42,69 +47,52 @@ function saveControls(controls: Control[]) {
   }
 }
 
-// Build mapping of control IDs to criteria codes
-function buildControlToCriteriaMap(): Map<string, string[]> {
-  const map = new Map<string, string[]>();
+// Get framework categories with their controls
+function buildCriteriaGroups(controls: Control[], frameworkId?: string): CriteriaGroup[] {
+  const targetFrameworkId = frameworkId || "soc2-type2";
+  const framework = frameworks.find((f) => f.id === targetFrameworkId);
+  if (!framework) return [];
 
-  frameworks.forEach((framework) => {
-    framework.categories.forEach((category) => {
-      category.requirements.forEach((requirement) => {
-        requirement.mappedControlIds.forEach((controlId) => {
-          const existing = map.get(controlId) || [];
-          if (!existing.includes(requirement.referenceCode)) {
-            existing.push(requirement.referenceCode);
-          }
-          map.set(controlId, existing);
-        });
-      });
-    });
-  });
-
-  return map;
-}
-
-// Get SOC 2 categories with their controls
-function buildCriteriaGroups(controls: Control[]): CriteriaGroup[] {
-  const soc2 = frameworks.find((f) => f.id === "soc2-type2");
-  if (!soc2) return [];
-
-  const controlToCriteria = buildControlToCriteriaMap();
   const groups: CriteriaGroup[] = [];
 
-  soc2.categories.forEach((category) => {
-    // Get the category prefix (e.g., "CC1" from "soc2-cc1")
-    const prefix = category.id.replace("soc2-", "").toUpperCase();
-
-    // Find all controls that have criteria starting with this prefix
-    const categoryControls = controls.filter((control) => {
-      const criteria = controlToCriteria.get(control.id) || [];
-      return criteria.some((c) => c.startsWith(prefix));
+  framework.categories.forEach((category) => {
+    // Build mapping of control ID to criteria codes for this category
+    const controlToCriteria = new Map<string, string[]>();
+    category.requirements.forEach((requirement) => {
+      requirement.mappedControlIds.forEach((controlId) => {
+        const existing = controlToCriteria.get(controlId) || [];
+        if (!existing.includes(requirement.referenceCode)) {
+          existing.push(requirement.referenceCode);
+        }
+        controlToCriteria.set(controlId, existing);
+      });
     });
 
-    // Remove duplicates and sort by criteria
-    const uniqueControls = Array.from(
-      new Map(categoryControls.map((c) => [c.id, c])).values()
-    );
+    // Find controls that are mapped to this category and add criteria codes
+    const categoryControls: ControlWithCriteria[] = controls
+      .filter((control) => controlToCriteria.has(control.id))
+      .map((control) => ({
+        ...control,
+        criteriaCodesForCategory: controlToCriteria.get(control.id) || [],
+      }));
 
     groups.push({
       id: category.id,
       name: category.name,
       description: category.description,
-      controls: uniqueControls,
+      controls: categoryControls,
     });
   });
 
   return groups;
 }
 
-export function ControlsByCriteria({ controls: initialControls }: ControlsByCriteriaProps) {
+export function ControlsByCriteria({ controls: initialControls, frameworkId }: ControlsByCriteriaProps) {
   const [controls, setControls] = useState<Control[]>(initialControls);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [selectedControl, setSelectedControl] = useState<Control | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-
-  const controlToCriteria = useMemo(() => buildControlToCriteriaMap(), []);
 
   // Filter controls based on selected filters
   const filteredControls = useMemo(() => {
@@ -127,7 +115,7 @@ export function ControlsByCriteria({ controls: initialControls }: ControlsByCrit
     }
   }, []);
 
-  const criteriaGroups = useMemo(() => buildCriteriaGroups(filteredControls), [filteredControls]);
+  const criteriaGroups = useMemo(() => buildCriteriaGroups(filteredControls, frameworkId), [filteredControls, frameworkId]);
 
   const handleStatusChange = (controlId: string, newStatus: ControlStatus) => {
     setControls((prev) => {
@@ -248,12 +236,6 @@ export function ControlsByCriteria({ controls: initialControls }: ControlsByCrit
               <CardContent className="pt-0">
                 <div className="space-y-2">
                   {group.controls.map((control) => {
-                    const criteria = controlToCriteria.get(control.id) || [];
-                    const prefix = group.id.replace("soc2-", "").toUpperCase();
-                    const relevantCriteria = criteria
-                      .filter((c) => c.startsWith(prefix))
-                      .sort();
-
                     return (
                       <div
                         key={control.id}
@@ -262,7 +244,7 @@ export function ControlsByCriteria({ controls: initialControls }: ControlsByCrit
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="flex flex-wrap gap-1 shrink-0">
-                            {relevantCriteria.map((code) => (
+                            {control.criteriaCodesForCategory.sort().map((code) => (
                               <Badge
                                 key={code}
                                 variant="outline"

@@ -2,6 +2,25 @@ import { Risk } from "@/types";
 
 export const risks: Risk[] = [
   {
+    id: "RSK-000",
+    title: "Legacy System Security Vulnerabilities",
+    description: "Legacy customer portal running on outdated software with known security vulnerabilities. System contains historical customer data and payment information.",
+    category: "Technical",
+    severity: "Critical",
+    status: "Open",
+    likelihood: 4,
+    impact: 5,
+    riskScore: 20,
+    owner: "Alex Johnson",
+    ownerEmail: "alex.johnson@company.com",
+    treatmentPlan: "Plan migration to new platform, implement additional network segmentation, increase monitoring",
+    mitigatingControls: ["CTL-015", "CTL-033"],
+    dateIdentified: "2024-06-01",
+    dueDate: "2025-01-15",
+    lastReviewed: "2024-11-20",
+    residualRisk: "High",
+  },
+  {
     id: "RSK-001",
     title: "Third-Party Vendor Data Breach",
     description: "Risk of data breach through compromised third-party vendor with access to customer data. Payment processor and analytics providers have direct API access.",
@@ -72,9 +91,9 @@ export const risks: Risk[] = [
     ownerEmail: "david.kim@company.com",
     treatmentPlan: "Implement AWS Config rules, deploy CSPM tool, require infrastructure as code for all changes",
     mitigatingControls: ["CTL-015", "CTL-029", "CTL-033"],
-    dateIdentified: "2025-08-15",
-    dueDate: "2025-12-01",
-    lastReviewed: "2026-01-28",
+    dateIdentified: "2024-08-15",
+    dueDate: "2024-12-01",
+    lastReviewed: "2024-12-15",
     residualRisk: "Low",
   },
   {

@@ -13,7 +13,6 @@ import {
   Building2,
   Users,
   Plug,
-  ShieldCheck,
   LogOut,
   KeyRound,
   Settings,
@@ -225,13 +224,17 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild className="h-auto py-2">
               <Link href={homeLink}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <ShieldCheck className="size-4" />
+                <div className="flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/pillar-transparent.png"
+                    alt="Cornerstone GRC"
+                    className="h-12 w-auto"
+                  />
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Cornerstone GRC</span>
+                <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                   <span className="text-xs text-muted-foreground">
                     {user?.role === "auditor" ? "Auditor Portal" : "Client Portal"}
                   </span>
